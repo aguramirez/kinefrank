@@ -54,7 +54,7 @@ export default function AdminLoginPage() {
         <div 
           className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full blur-[140px] transition-all duration-[2000ms]"
           style={{ 
-            background: 'radial-gradient(circle, rgba(255,109,0,0.12) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(250,215,0,0.12) 0%, transparent 70%)',
             opacity: mounted ? 1 : 0,
             transform: mounted ? 'scale(1)' : 'scale(0.5)',
           }}
@@ -63,7 +63,7 @@ export default function AdminLoginPage() {
         <div 
           className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full blur-[100px] transition-all duration-[2500ms] delay-300"
           style={{ 
-            background: 'radial-gradient(circle, rgba(255,109,0,0.1) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(250,215,0,0.1) 0%, transparent 70%)',
             opacity: mounted ? 1 : 0,
             transform: mounted ? 'scale(1)' : 'scale(0.5)',
           }}
@@ -81,7 +81,7 @@ export default function AdminLoginPage() {
         <div 
           className="absolute top-0 right-0 w-full h-full transition-opacity duration-[3000ms] delay-700"
           style={{
-            background: 'linear-gradient(135deg, rgba(255,109,0,0.03) 0%, transparent 40%)',
+            background: 'linear-gradient(135deg, rgba(250,215,0,0.03) 0%, transparent 40%)',
             opacity: mounted ? 1 : 0,
           }}
         />
@@ -113,8 +113,8 @@ export default function AdminLoginPage() {
         </div>
 
         {/* Title */}
-        <h1 className="text-3xl font-black text-white tracking-tight mb-1">
-          OMEGA<span className="text-primary">FIT</span>
+        <h1 className="text-3xl font-black text-white tracking-tight mb-1 text-center">
+          THUNDER <span className="text-primary">REHAB</span>
         </h1>
         <p className="text-slate-500 text-sm mb-8 text-center">
           Acceso exclusivo para profesionales
@@ -124,7 +124,7 @@ export default function AdminLoginPage() {
         <div 
           className="w-full bg-card-dark/80 backdrop-blur-xl rounded-3xl border border-slate-800/80 shadow-2xl shadow-black/40 overflow-hidden transition-all duration-500"
           style={{
-            borderColor: focusedField ? 'rgba(255,109,0,0.25)' : 'rgba(30,41,59,0.8)',
+            borderColor: focusedField ? 'rgba(250,215,0,0.25)' : 'rgba(30,41,59,0.8)',
           }}
         >
           {/* Card Header */}
@@ -160,7 +160,7 @@ export default function AdminLoginPage() {
               <div className="relative group">
                 <span 
                   className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-lg transition-colors duration-300"
-                  style={{ color: focusedField === 'username' ? '#ff6d00' : '#64748b' }}
+                  style={{ color: focusedField === 'username' ? '#FAD700' : '#64748b' }}
                 >
                   person
                 </span>
@@ -189,7 +189,7 @@ export default function AdminLoginPage() {
               <div className="relative group">
                 <span 
                   className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-lg transition-colors duration-300"
-                  style={{ color: focusedField === 'password' ? '#ff6d00' : '#64748b' }}
+                  style={{ color: focusedField === 'password' ? '#FAD700' : '#64748b' }}
                 >
                   lock
                 </span>
@@ -249,7 +249,7 @@ export default function AdminLoginPage() {
 
         {/* Footer */}
         <p className="text-center text-[10px] text-slate-700 mt-6 tracking-wide">
-          OMEGAFIT © 2026
+          THUNDER REHABILITACIÓN © 2026
         </p>
       </div>
 

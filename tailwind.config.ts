@@ -10,7 +10,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        "primary": "#ff6d00",
+        "primary": "#FAD700",
         "background-light": "#f8f7f5",
         "background-dark": "#0A0A0A",
         "card-dark": "#1A1A1A",

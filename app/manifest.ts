@@ -2,13 +2,13 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'OMEGAFIT',
-    short_name: 'OMEGAFIT',
+    name: 'THUNDER REHABILITACIÓN',
+    short_name: 'THUNDER',
     description: 'Gestión de pacientes',
     start_url: '/',
     display: 'standalone',
-    background_color: '#ff6d00',
-    theme_color: '#ff6d00',
+    background_color: '#FAD700',
+    theme_color: '#FAD700',
     icons: [
       {
         src: '/api/icon-square',

@@ -5,17 +5,17 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "OMEGAFIT",
-  description: "Lic. Oscar Robles",
+  title: "THUNDER REHABILITACIÓN",
+  description: "Lic. Franco Henriquez",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "OMEGAFIT",
+    title: "THUNDER REHABILITACIÓN",
   },
 };
 
 export const viewport = {
-  themeColor: "#ff6d00",
+  themeColor: "#FAD700",
 };
 
 export default function RootLayout({

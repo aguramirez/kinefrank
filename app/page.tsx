@@ -52,7 +52,7 @@ export default function PacienteLoginPage() {
         <div 
           className="absolute -top-32 -right-32 w-96 h-96 rounded-full blur-[120px] transition-all duration-[2000ms]"
           style={{ 
-            background: 'radial-gradient(circle, rgba(255,109,0,0.15) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(250,215,0,0.15) 0%, transparent 70%)',
             opacity: mounted ? 1 : 0,
             transform: mounted ? 'scale(1)' : 'scale(0.5)',
           }}
@@ -61,7 +61,7 @@ export default function PacienteLoginPage() {
         <div 
           className="absolute -bottom-48 -left-24 w-80 h-80 rounded-full blur-[100px] transition-all duration-[2500ms] delay-300"
           style={{ 
-            background: 'radial-gradient(circle, rgba(255,109,0,0.08) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(250,215,0,0.08) 0%, transparent 70%)',
             opacity: mounted ? 1 : 0,
             transform: mounted ? 'scale(1)' : 'scale(0.5)',
           }}
@@ -95,18 +95,18 @@ export default function PacienteLoginPage() {
         </div>
 
         {/* Title */}
-        <h1 className="text-4xl font-black text-white tracking-tight mb-1">
-          OMEGA<span className="text-primary">FIT</span>
+        <h1 className="text-3xl font-black text-white tracking-tight mb-1 text-center">
+          THUNDER <span className="text-primary">REHAB</span>
         </h1>
         <p className="text-slate-500 text-sm mb-10 text-center">
-          Lic. Oscar Robles
+          Lic. Franco Henriquez
         </p>
 
         {/* Login Card */}
         <div 
           className="w-full bg-card-dark/80 backdrop-blur-xl rounded-3xl border border-slate-800/80 shadow-2xl shadow-black/40 overflow-hidden transition-all duration-500"
           style={{
-            borderColor: focusedInput ? 'rgba(255,109,0,0.3)' : 'rgba(30,41,59,0.8)',
+            borderColor: focusedInput ? 'rgba(250,215,0,0.3)' : 'rgba(30,41,59,0.8)',
           }}
         >
           {/* Card Header */}
@@ -139,7 +139,7 @@ export default function PacienteLoginPage() {
               <div className="relative group">
                 <span 
                   className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-lg transition-colors duration-300"
-                  style={{ color: focusedInput ? '#ff6d00' : '#64748b' }}
+                  style={{ color: focusedInput ? '#FAD700' : '#64748b' }}
                 >
                   badge
                 </span>
@@ -200,7 +200,7 @@ export default function PacienteLoginPage() {
 
         {/* Footer */}
         <p className="text-center text-[10px] text-slate-700 mt-6 tracking-wide">
-          OMEGAFIT © 2026
+          THUNDER REHABILITACIÓN © 2026
         </p>
       </div>
 

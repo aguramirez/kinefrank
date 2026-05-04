@@ -2,7 +2,7 @@
 trigger: always_on
 ---
 
-# Reglas del Proyecto: KineApp (Kinesiología Digital)
+# Reglas del Proyecto: KineAppFrank (Kinesiología Digital)
 
 ## Descripción General
 Webapp responsive (Mobile First) diseñada para profesionales de la kinesiología. Permite la gestión de pacientes, creación y asignación de rutinas de ejercicios, y seguimiento de diagnósticos. Existen dos tipos de usuarios principales: **Admin** (Kinesiólogo) y **Paciente**.
