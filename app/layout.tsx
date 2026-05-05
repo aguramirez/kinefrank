@@ -7,6 +7,15 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 export const metadata: Metadata = {
   title: "THUNDER REHABILITACIÓN",
   description: "Lic. Franco Henriquez",
+  icons: {
+    icon: [
+      { url: "/logo.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/logo.svg", type: "image/svg+xml" },
+    ],
+    shortcut: ["/logo.svg"],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -23,7 +32,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // El usuario solicitó modo oscuro por defecto.
   return (
     <html lang="es" className="dark">
       <head>

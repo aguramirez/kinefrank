@@ -7,7 +7,7 @@ export async function GET(req: Request) {
     await checkExpirations();
     const { searchParams } = new URL(req.url);
     const adminId = searchParams.get('adminId');
-    const where = adminId ? { adminId } : {};
+    const where = adminId ? { OR: [{ adminId }, { adminId: null }] } : {};
 
     const alumnos = await prisma.alumno.findMany({
       where,

@@ -333,14 +333,14 @@ export default function RutinasPage() {
     dayIdx: number,
     exIdx: number,
     field: keyof EjercicioEnDia,
-    value: string | number
+    value: string | number | boolean
   ) => {
     const copy = [...formDias];
     const ex = { ...copy[dayIdx].ejercicios[exIdx] };
     if (field === "sets" || field === "reps") {
       ex[field] = Number(value) || 0;
     } else if (field === "isCircuit") {
-      ex.isCircuit = value === true || value === "true";
+      ex.isCircuit = value === true || value === "true" || value === 1;
     } else {
       (ex as any)[field] = value;
     }
@@ -1043,7 +1043,7 @@ export default function RutinasPage() {
                                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Circuito</label>
                                       <button
                                         type="button"
-                                        onClick={() => updateExercise(dIdx, eIdx, "isCircuit", !ex.isCircuit as any)}
+                                        onClick={() => updateExercise(dIdx, eIdx, "isCircuit", !ex.isCircuit)}
                                         className={`w-10 h-10 rounded-lg border flex items-center justify-center transition-all shadow-sm ${ex.isCircuit ? 'bg-yellow-500/20 border-yellow-500/50' : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-primary/30'}`}
                                         title={ex.isCircuit ? "Quitar circuito" : "Marcar como circuito"}
                                       >
