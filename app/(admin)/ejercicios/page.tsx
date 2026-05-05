@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Logo from "@/components/Logo";
+import ExerciseVideo from "@/components/ExerciseVideo";
 
 interface Ejercicio {
   id: string;
@@ -363,7 +364,7 @@ export default function EjerciciosPage() {
                 <div className="w-full aspect-video bg-slate-100 dark:bg-slate-800/50 rounded-xl overflow-hidden flex items-center justify-center relative border border-slate-200 dark:border-slate-700/50">
                   {ej.videoUrl ? (
                     <>
-                      <video src={ej.videoUrl} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" muted playsInline preload="metadata" />
+                      <ExerciseVideo url={ej.videoUrl} thumbnailMode={true} videoClassName="opacity-80 group-hover:opacity-100 transition-opacity" />
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white">
                           <span className="material-symbols-outlined text-sm">play_arrow</span>
@@ -487,10 +488,9 @@ export default function EjerciciosPage() {
                     <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Video de demostración</h4>
                     {selectedEjercicio.videoUrl ? (
                       <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 aspect-video bg-black/5 dark:bg-white/5 flex items-center justify-center relative">
-                        <video 
-                          src={selectedEjercicio.videoUrl} 
-                          controls 
-                          className="w-full h-full max-h-[40vh] object-contain rounded-xl"
+                        <ExerciseVideo 
+                          url={selectedEjercicio.videoUrl} 
+                          videoClassName="max-h-[40vh] object-contain rounded-xl"
                         />
                       </div>
                     ) : (
@@ -638,10 +638,9 @@ export default function EjerciciosPage() {
                     <div className="space-y-3">
                       {formVideoUrl ? (
                         <div className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-white/[0.03]">
-                          <video 
-                            src={formVideoUrl} 
-                            controls 
-                            className="w-full max-h-[200px] object-contain bg-black/5 dark:bg-black/20"
+                          <ExerciseVideo 
+                            url={formVideoUrl} 
+                            videoClassName="max-h-[200px] object-contain bg-black/5 dark:bg-black/20"
                           />
                           <button
                             type="button"

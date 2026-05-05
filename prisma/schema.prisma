@@ -16,6 +16,7 @@ model Admin {
   username  String   @unique
   createdAt DateTime @default(now())
   pacientes Paciente[]
+  alumnos   Alumno[]
 }
 
 model Paciente {
@@ -33,14 +34,36 @@ model Paciente {
   totalSessions    Int       @default(0)
   lastSessionDate  DateTime?
   healthInsurance  String?
-  totalInvoiced    Float     @default(0)
-  totalPaid        Float     @default(0)
-  difference       Float     @default(0)
   isActive         Boolean   @default(true)
   dischargeDate    DateTime?
+  expirationDate   DateTime?
   diagnoses        String[]
-  spadi            Json      @default("{}")
-  spadiEnd         Json?     @default("{}")
+  createdAt        DateTime  @default(now())
+  rutinas          Rutina[]
+  adminId          String?
+  admin            Admin?    @relation(fields: [adminId], references: [id])
+  notasClinicas    NotaClinica[]
+}
+
+model Alumno {
+  id               String    @id @default(uuid())
+  fullName         String
+  dni              String    @unique
+  phone            String?
+  email            String?
+  gender           String?
+  age              Int?
+  height           Float?
+  weight           Float?
+  notes            String?
+  sessionsCount    Int       @default(0)
+  totalSessions    Int       @default(0)
+  lastSessionDate  DateTime?
+  healthInsurance  String?
+  isActive         Boolean   @default(true)
+  dischargeDate    DateTime?
+  expirationDate   DateTime?
+  diagnoses        String[]
   createdAt        DateTime  @default(now())
   rutinas          Rutina[]
   adminId          String?
@@ -64,6 +87,8 @@ model Rutina {
   dias        Dia[]
   pacienteId  String?
   paciente    Paciente? @relation(fields: [pacienteId], references: [id])
+  alumnoId    String?
+  alumno      Alumno?   @relation(fields: [alumnoId], references: [id])
   createdAt   DateTime @default(now())
 }
 
@@ -84,6 +109,8 @@ model EjercicioEnDia {
   sets       Int
   reps       Int
   time       String?
+  intervalo  String?
+  isCircuit  Boolean   @default(false)
   createdAt  DateTime  @default(now())
 }
 
@@ -92,8 +119,10 @@ model NotaClinica {
   title       String
   description String
   photoUrl    String?
-  pacienteId  String
-  paciente    Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  pacienteId  String?
+  paciente    Paciente? @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  alumnoId    String?
+  alumno      Alumno?   @relation(fields: [alumnoId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
 }
 

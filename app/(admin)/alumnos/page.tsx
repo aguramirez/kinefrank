@@ -30,7 +30,7 @@ interface RutinaInfo {
   dias: RutinaDia[];
 }
 
-interface Paciente {
+interface Alumno {
   id: string;
   fullName: string;
   dni: string;
@@ -61,16 +61,16 @@ const DEFAULT_FORM = {
   expirationDate: "", diagnoses: [] as string[],
 };
 
-export default function PacientesPage() {
+export default function AlumnosPage() {
   const router = useRouter();
-  const [pacientes, setPacientes] = useState<Paciente[]>([]);
+  const [alumnos, setAlumnos] = useState<Alumno[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'alta' | 'porVencer'>('all');
 
   // Modal
   const [modalMode, setModalMode] = useState<ModalMode>(null);
-  const [selected, setSelected] = useState<Paciente | null>(null);
+  const [selected, setSelected] = useState<Alumno | null>(null);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"info" | "diagnosticos" | "historia">("info");
 
@@ -83,7 +83,7 @@ export default function PacientesPage() {
   const [diagInput, setDiagInput] = useState("");
 
   // Toggle active
-  const [toggleTarget, setToggleTarget] = useState<Paciente | null>(null);
+  const [toggleTarget, setToggleTarget] = useState<Alumno | null>(null);
   const [toggling, setToggling] = useState(false);
 
   // Toast
@@ -103,14 +103,14 @@ export default function PacientesPage() {
     ejerciciosCatalog.find((e) => e.id === exerciseId)?.name || "Sin nombre";
 
   /* ── Fetch ── */
-  const fetchPacientes = useCallback(async () => {
+  const fetchAlumnos = useCallback(async () => {
     try {
       const adminStr = localStorage.getItem("admin");
       const adminId = adminStr ? JSON.parse(adminStr).id : "";
-      const url = adminId ? `/api/pacientes?adminId=${adminId}` : "/api/pacientes";
+      const url = adminId ? `/api/alumnos?adminId=${adminId}` : "/api/alumnos";
       const res = await fetch(url);
-      if (res.ok) setPacientes(await res.json());
-    } catch { showToast("Error al cargar pacientes", "error"); }
+      if (res.ok) setAlumnos(await res.json());
+    } catch { showToast("Error al cargar alumnos", "error"); }
     finally { setLoading(false); }
   }, []);
 
@@ -121,7 +121,7 @@ export default function PacientesPage() {
     } catch { /* silent */ }
   }, []);
 
-  useEffect(() => { fetchPacientes(); fetchDiagnoses(); }, [fetchPacientes, fetchDiagnoses]);
+  useEffect(() => { fetchAlumnos(); fetchDiagnoses(); }, [fetchAlumnos, fetchDiagnoses]);
 
   // Fetch ejercicios catalog
   useEffect(() => {
@@ -133,7 +133,7 @@ export default function PacientesPage() {
     })();
   }, []);
 
-  const filtered = pacientes.filter((p) => {
+  const filtered = alumnos.filter((p) => {
     const matchesSearch = p.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           p.dni.includes(searchQuery) ||
                           (p.email || "").toLowerCase().includes(searchQuery.toLowerCase());
@@ -165,7 +165,7 @@ export default function PacientesPage() {
     setModalMode("create");
   };
 
-  const openEdit = (p: Paciente) => {
+  const openEdit = (p: Alumno) => {
     setForm({
       fullName: p.fullName,
       dni: p.dni,
@@ -187,8 +187,8 @@ export default function PacientesPage() {
     setModalMode("edit");
   };
 
-  const openDelete = (p: Paciente) => { setSelected(p); setModalMode("delete"); };
-  const openView = (p: Paciente) => { setSelected(p); setActiveTab("info"); setModalMode("view"); };
+  const openDelete = (p: Alumno) => { setSelected(p); setModalMode("delete"); };
+  const openView = (p: Alumno) => { setSelected(p); setActiveTab("info"); setModalMode("view"); };
   const closeModal = () => { setModalMode(null); setSelected(null); setFormError(""); };
 
   /* ── Diagnoses ── */
@@ -234,12 +234,12 @@ export default function PacientesPage() {
       healthInsurance: form.healthInsurance.trim() || null,
       totalSessions: form.totalSessions ? Number(form.totalSessions) : 0,
       diagnoses: form.diagnoses,
-      expirationDate: form.expirationDate || null,
+      expirationDate: form.expirationDate ? new Date(form.expirationDate) : null,
       adminId: adminObj ? adminObj.id : null,
     };
 
     try {
-      const url = modalMode === "edit" && selected ? `/api/pacientes/${selected.id}` : "/api/pacientes";
+      const url = modalMode === "edit" && selected ? `/api/alumnos/${selected.id}` : "/api/alumnos";
       const method = modalMode === "edit" ? "PUT" : "POST";
       const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!res.ok) {
@@ -247,9 +247,9 @@ export default function PacientesPage() {
         setFormError(data.error || "Error al guardar");
         return;
       }
-      showToast(modalMode === "create" ? "Paciente creado" : "Paciente actualizado", "success");
+      showToast(modalMode === "create" ? "Alumno creado" : "Alumno actualizado", "success");
       closeModal();
-      fetchPacientes();
+      fetchAlumnos();
       fetchDiagnoses();
     } catch { setFormError("Error de conexión"); }
     finally { setSaving(false); }
@@ -259,11 +259,11 @@ export default function PacientesPage() {
     if (!selected) return;
     setSaving(true);
     try {
-      const res = await fetch(`/api/pacientes/${selected.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/alumnos/${selected.id}`, { method: "DELETE" });
       if (!res.ok) { showToast("Error al eliminar", "error"); return; }
-      showToast("Paciente eliminado", "success");
+      showToast("Alumno eliminado", "success");
       closeModal();
-      fetchPacientes();
+      fetchAlumnos();
     } catch { showToast("Error de conexión", "error"); }
     finally { setSaving(false); }
   };
@@ -273,15 +273,15 @@ export default function PacientesPage() {
     if (!toggleTarget) return;
     setToggling(true);
     try {
-      const res = await fetch(`/api/pacientes/${toggleTarget.id}`, {
+      const res = await fetch(`/api/alumnos/${toggleTarget.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !toggleTarget.isActive }),
       });
       if (!res.ok) { showToast("Error al cambiar estado", "error"); return; }
-      showToast(toggleTarget.isActive ? "Paciente dado de alta" : "Paciente activado", "success");
+      showToast(toggleTarget.isActive ? "Alumno dado de alta" : "Alumno activado", "success");
       setToggleTarget(null);
-      fetchPacientes();
+      fetchAlumnos();
     } catch { showToast("Error de conexión", "error"); }
     finally { setToggling(false); }
   };
@@ -289,7 +289,7 @@ export default function PacientesPage() {
   /* ── Rutina Actions ── */
   const handleDesasignarRutina = async () => {
     if (!rutinaDetail) return;
-    if (!confirm("¿Estás seguro de desasignar esta rutina? No se borrará del sistema, pero el paciente ya no podrá verla.")) return;
+    if (!confirm("¿Estás seguro de desasignar esta rutina? No se borrará del sistema, pero el alumno ya no podrá verla.")) return;
     
     try {
       const res = await fetch(`/api/rutinas/${rutinaDetail.id}`, {
@@ -298,7 +298,7 @@ export default function PacientesPage() {
         body: JSON.stringify({
           name: rutinaDetail.name,
           description: rutinaDetail.description,
-          pacienteId: null, // This removes the assignment
+          alumnoId: null, // This removes the assignment
           dias: rutinaDetail.dias
         }),
       });
@@ -306,7 +306,7 @@ export default function PacientesPage() {
       
       showToast("Rutina desasignada correctamente", "success");
       setRutinaDetail(null);
-      fetchPacientes(); // Refresh patients to update routine counts
+      fetchAlumnos(); // Refresh patients to update routine counts
     } catch {
       showToast("Error al desasignar la rutina", "error");
     }
@@ -341,15 +341,15 @@ export default function PacientesPage() {
         </div>
         <button onClick={openCreate} className="flex items-center gap-2 px-4 md:px-5 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl text-sm shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all ml-4">
           <span className="material-symbols-outlined text-lg">person_add</span>
-          <span className="hidden sm:inline">Nuevo Paciente</span>
+          <span className="hidden sm:inline">Nuevo Alumno</span>
         </button>
       </header>
 
       <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
         <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white">Pacientes</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white">Alumnos</h1>
           {/* <p className="text-slate-500 dark:text-slate-400 mt-1 md:mt-2 text-sm md:text-base">
-            Gestioná los pacientes del consultorio. Actualmente hay <span className="text-primary font-bold">{pacientes.length}</span> pacientes.
+            Gestioná los alumnos del consultorio. Actualmente hay <span className="text-primary font-bold">{alumnos.length}</span> alumnos.
           </p> */}
         </div>
 
@@ -359,7 +359,7 @@ export default function PacientesPage() {
               <span className="material-symbols-outlined text-xl md:text-2xl">groups</span>
             </div>
             <div className="min-w-0">
-              <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white truncate">{pacientes.length}</p>
+              <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white truncate">{alumnos.length}</p>
               <p className="text-[10px] md:text-xs font-medium text-slate-500 dark:text-slate-400 truncate">Total</p>
             </div>
           </div>
@@ -377,7 +377,7 @@ export default function PacientesPage() {
             </div>
             <div className="min-w-0">
               <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white truncate">
-                {pacientes.filter((p) => p.isActive).length}
+                {alumnos.filter((p) => p.isActive).length}
               </p>
               <p className="text-[10px] md:text-xs font-medium text-slate-500 dark:text-slate-400 truncate">Activos</p>
             </div>
@@ -396,7 +396,7 @@ export default function PacientesPage() {
             </div>
             <div className="min-w-0">
               <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white truncate">
-                {pacientes.filter((p) => !p.isActive).length}
+                {alumnos.filter((p) => !p.isActive).length}
               </p>
               <p className="text-[10px] md:text-xs font-medium text-slate-500 dark:text-slate-400 truncate">Alta</p>
             </div>
@@ -415,7 +415,7 @@ export default function PacientesPage() {
             </div>
             <div className="min-w-0">
               <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white truncate">
-                {pacientes.filter((p) => {
+                {alumnos.filter((p) => {
                   if (!p.isActive || !p.expirationDate) return false;
                   const exp = new Date(p.expirationDate);
                   const now = new Date();
@@ -433,7 +433,7 @@ export default function PacientesPage() {
               <span className="material-symbols-outlined text-xl md:text-2xl">event</span>
             </div>
             <div className="min-w-0">
-              <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white truncate">{pacientes.reduce((a, p) => a + p.sessionsCount, 0)}</p>
+              <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white truncate">{alumnos.reduce((a, p) => a + p.sessionsCount, 0)}</p>
               <p className="text-[10px] md:text-xs font-medium text-slate-500 dark:text-slate-400 truncate">Sesiones</p>
             </div>
           </div>
@@ -442,18 +442,18 @@ export default function PacientesPage() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Logo animate className="w-12 h-12 text-primary mb-4" />
-            <p className="text-slate-500 dark:text-slate-400 font-medium">Cargando pacientes...</p>
+            <p className="text-slate-500 dark:text-slate-400 font-medium">Cargando alumnos...</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-card-dark rounded-2xl border border-slate-200 dark:border-slate-800">
             <div className="w-20 h-20 bg-slate-100 dark:bg-white/5 rounded-2xl flex items-center justify-center mb-4">
               <span className="material-symbols-outlined text-4xl text-slate-400">{searchQuery ? "search_off" : "groups"}</span>
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">{searchQuery ? "Sin resultados" : "No hay pacientes"}</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{searchQuery ? `No se encontraron pacientes para "${searchQuery}"` : "Agregá tu primer paciente"}</p>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">{searchQuery ? "Sin resultados" : "No hay alumnos"}</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{searchQuery ? `No se encontraron alumnos para "${searchQuery}"` : "Agregá tu primer alumno"}</p>
             {!searchQuery && (
               <button onClick={openCreate} className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-bold rounded-xl text-sm shadow-lg shadow-primary/20 transition-all">
-                <span className="material-symbols-outlined text-lg">person_add</span>Crear Paciente
+                <span className="material-symbols-outlined text-lg">person_add</span>Crear Alumno
               </button>
             )}
           </div>
@@ -465,7 +465,7 @@ export default function PacientesPage() {
                 <table className="w-full text-left border-collapse min-w-[800px]">
                   <thead>
                   <tr className="bg-slate-50 dark:bg-white/5 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                    <th className="px-6 py-4">Paciente</th>
+                    <th className="px-6 py-4">Alumno</th>
                     <th className="px-6 py-4">DNI</th>
                     <th className="px-6 py-4">Obra Social</th>
                     <th className="px-6 py-4 text-center">Sesiones</th>
@@ -515,7 +515,7 @@ export default function PacientesPage() {
                         <button
                           onClick={() => setToggleTarget(p)}
                           className="inline-flex items-center gap-2 group cursor-pointer"
-                          title={p.isActive ? "Dar de alta" : "Activar paciente"}
+                          title={p.isActive ? "Dar de alta" : "Activar alumno"}
                         >
                           <div className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${p.isActive ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`}>
                             <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ${p.isActive ? "translate-x-4" : "translate-x-0"}`} />
@@ -587,7 +587,7 @@ export default function PacientesPage() {
               <>
                 <div className="p-6 text-center">
                   <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mx-auto mb-4"><span className="material-symbols-outlined text-red-500 text-3xl">delete_forever</span></div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Eliminar Paciente</h3>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Eliminar Alumno</h3>
                   <p className="text-slate-500 dark:text-slate-400 text-sm mb-1">¿Estás seguro que querés eliminar a</p>
                   <p className="text-primary font-bold mb-3">&quot;{selected.fullName}&quot;</p>
                   <p className="text-xs text-slate-400 dark:text-slate-500">DNI: {selected.dni} · Esta acción no se puede deshacer.</p>
@@ -640,8 +640,8 @@ export default function PacientesPage() {
                           <div className="flex flex-col items-center justify-center py-6 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-700">
                             <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 mb-2">assignment_add</span>
                             <p className="text-sm font-bold text-slate-900 dark:text-white mb-1">Sin rutina asignada</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Este paciente no tiene ninguna rutina de rehabilitación activa.</p>
-                            <Link href={`/rutinas?pacienteId=${selected.id}`} className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-primary/20 flex items-center gap-1.5">
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Este alumno no tiene ninguna rutina de rehabilitación activa.</p>
+                            <Link href={`/rutinas?alumnoId=${selected.id}`} className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-primary/20 flex items-center gap-1.5">
                               <span className="material-symbols-outlined text-[16px]">add</span>
                               Crear rutina
                             </Link>
@@ -664,7 +664,7 @@ export default function PacientesPage() {
                                 <span className="material-symbols-outlined text-slate-400 group-hover:text-primary text-sm transition-colors">chevron_right</span>
                               </button>
                             ))}
-                            <Link href={`/rutinas?pacienteId=${selected.id}`} className="w-full mt-2 py-2 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-1.5 bg-white/50 dark:bg-card-dark/50">
+                            <Link href={`/rutinas?alumnoId=${selected.id}`} className="w-full mt-2 py-2 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-1.5 bg-white/50 dark:bg-card-dark/50">
                               <span className="material-symbols-outlined text-sm">add</span>
                               Asignar otra rutina
                             </Link>
@@ -714,7 +714,7 @@ export default function PacientesPage() {
                     </div>
                   )}
                   {activeTab === "historia" && (
-                    <HistoriaClinicaTab pacienteId={selected.id} />
+                    <HistoriaClinicaTab alumnoId={selected.id} />
                   )}
                 </div>
               </>
@@ -727,7 +727,7 @@ export default function PacientesPage() {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><span className="material-symbols-outlined">{modalMode === "create" ? "person_add" : "edit"}</span></div>
                     <div>
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">{modalMode === "create" ? "Nuevo Paciente" : "Editar Paciente"}</h3>
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">{modalMode === "create" ? "Nuevo Alumno" : "Editar Alumno"}</h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400">{modalMode === "create" ? "Solo nombre y DNI son obligatorios" : `Editando: ${selected?.fullName}`}</p>
                     </div>
                   </div>
@@ -872,7 +872,7 @@ export default function PacientesPage() {
                   )}
 
                   {activeTab === "historia" && (
-                    <HistoriaClinicaTab pacienteId={selected?.id || ""} />
+                    <HistoriaClinicaTab alumnoId={selected?.id || ""} />
                   )}
 
 
@@ -883,7 +883,7 @@ export default function PacientesPage() {
                   <button onClick={closeModal} className="flex-1 py-3.5 bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-bold hover:bg-slate-200 dark:hover:bg-white/10 transition-all">Cancelar</button>
                   <button onClick={handleSave} disabled={saving} className="flex-1 py-3.5 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]">
                     {saving ? <Logo animate className="w-5 h-5 text-current" /> : <span className="material-symbols-outlined text-lg">{modalMode === "create" ? "person_add" : "save"}</span>}
-                    {saving ? "Guardando..." : modalMode === "create" ? "Crear Paciente" : "Guardar Cambios"}
+                    {saving ? "Guardando..." : modalMode === "create" ? "Crear Alumno" : "Guardar Cambios"}
                   </button>
                 </div>
               </>
@@ -903,16 +903,16 @@ export default function PacientesPage() {
                 </span>
               </div>
               <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-                {toggleTarget.isActive ? "Dar de Alta" : "Activar Paciente"}
+                {toggleTarget.isActive ? "Dar de Alta" : "Activar Alumno"}
               </h3>
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-1">
                 {toggleTarget.isActive
-                  ? "¿Estás seguro de dar de alta al paciente"
-                  : "¿Estás seguro de activar al paciente"}
+                  ? "¿Estás seguro de dar de alta al alumno"
+                  : "¿Estás seguro de activar al alumno"}
               </p>
               <p className="text-primary font-bold mb-3">&quot;{toggleTarget.fullName}&quot;</p>
               <p className="text-xs text-slate-400 dark:text-slate-500">
-                DNI: {toggleTarget.dni} · {toggleTarget.isActive ? "El paciente pasará a estado de alta." : "El paciente volverá a estar activo."}
+                DNI: {toggleTarget.dni} · {toggleTarget.isActive ? "El alumno pasará a estado de alta." : "El alumno volverá a estar activo."}
               </p>
             </div>
             <div className="flex gap-3 p-6 pt-0">
@@ -1007,7 +1007,7 @@ export default function PacientesPage() {
                 className="flex-1 py-3 text-red-500 bg-red-500/10 hover:bg-red-500/20 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2"
               >
                 <span className="material-symbols-outlined text-lg">person_remove</span>
-                Desasignar del paciente
+                Desasignar del alumno
               </button>
               <button 
                 onClick={handleEditRutina}

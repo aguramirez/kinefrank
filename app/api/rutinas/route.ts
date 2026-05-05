@@ -59,7 +59,9 @@ export async function POST(req: Request) {
                 exerciseId: ej.exerciseId,
                 sets: ej.sets,
                 reps: ej.reps,
-                time: ej.time
+                time: ej.time,
+                intervalo: ej.intervalo,
+                isCircuit: ej.isCircuit || false
               }))
             }
           }))

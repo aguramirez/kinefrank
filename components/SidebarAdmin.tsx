@@ -11,6 +11,7 @@ const navItems = [
   { href: "/ejercicios", label: "Ejercicios", icon: "fitness_center" },
   { href: "/rutinas", label: "Rutinas", icon: "assignment" },
   { href: "/pacientes", label: "Pacientes", icon: "groups" },
+  { href: "/alumnos", label: "Alumnos", icon: "school" },
 ];
 
 interface SidebarAdminProps {
@@ -76,7 +77,7 @@ export default function SidebarAdmin({ isOpen, onClose }: SidebarAdminProps) {
           <div className="flex items-center gap-3">
             <Logo className="w-10 h-10 text-primary" />
             <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase leading-none">
-              Omega<span className="text-primary">Fit</span>
+              Thunder<span className="text-primary">Rehab</span>
             </h2>
           </div>
           {/* Close button for mobile */}

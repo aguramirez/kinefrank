@@ -4,7 +4,7 @@ import prisma from '@/lib/prisma';
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const paciente = await prisma.paciente.findUnique({
+    const alumno = await prisma.alumno.findUnique({
       where: { id },
       include: {
         rutinas: {
@@ -13,13 +13,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       }
     });
 
-    if (!paciente) {
-      return NextResponse.json({ error: 'Paciente no encontrado' }, { status: 404 });
+    if (!alumno) {
+      return NextResponse.json({ error: 'Alumno no encontrado' }, { status: 404 });
     }
 
-    return NextResponse.json(paciente, { status: 200 });
+    return NextResponse.json(alumno, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ error: 'Error al obtener el paciente' }, { status: 500 });
+    return NextResponse.json({ error: 'Error al obtener el alumno' }, { status: 500 });
   }
 }
 
@@ -32,26 +32,26 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       updateData.expirationDate = new Date(updateData.expirationDate);
     }
 
-    const updatedPaciente = await prisma.paciente.update({
+    const updatedAlumno = await prisma.alumno.update({
       where: { id },
       data: updateData
     });
 
-    return NextResponse.json(updatedPaciente, { status: 200 });
+    return NextResponse.json(updatedAlumno, { status: 200 });
   } catch (error) {
-    console.error("Update Paciente Error:", error);
-    return NextResponse.json({ error: 'Error al actualizar el paciente' }, { status: 500 });
+    console.error("Update Alumno Error:", error);
+    return NextResponse.json({ error: 'Error al actualizar el alumno' }, { status: 500 });
   }
 }
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    await prisma.paciente.delete({
+    await prisma.alumno.delete({
       where: { id }
     });
-    return NextResponse.json({ message: 'Paciente eliminado correctamente' }, { status: 200 });
+    return NextResponse.json({ message: 'Alumno eliminado correctamente' }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ error: 'Error al eliminar el paciente' }, { status: 500 });
+    return NextResponse.json({ error: 'Error al eliminar el alumno' }, { status: 500 });
   }
 }

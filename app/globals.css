@@ -3,7 +3,7 @@
 
 /* Tailwind v4: Custom theme tokens */
 @theme {
-  --color-primary: #ff6d00;
+  --color-primary: #FAD700;
   --color-background-light: #f8f7f5;
   --color-background-dark: #0A0A0A;
   --color-card-dark: #1A1A1A;
@@ -40,17 +40,17 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 109, 0, 0.4);
+  background-color: rgba(250, 215, 0, 0.4);
   border-radius: 10px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 109, 0, 0.8);
+  background-color: rgba(250, 215, 0, 0.8);
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 109, 0, 0.4) transparent;
+  scrollbar-color: rgba(250, 215, 0, 0.4) transparent;
 }

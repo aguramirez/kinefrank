@@ -10,7 +10,6 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@tailwindcss/container-queries": "^0.1.1",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.9.0",
     "jsonwebtoken": "^9.0.3",
@@ -29,6 +28,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "pdf-parse": "^2.4.5",
+    "pdf2json": "^4.0.3",
+    "pdfjs-dist": "^5.6.205",
     "prisma": "^5.10.0",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",

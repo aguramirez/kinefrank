@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
+import ExerciseVideo from "@/components/ExerciseVideo";
 
 interface Exercise {
   id: string;
@@ -16,6 +17,8 @@ interface EjercicioEnDia {
   sets: number;
   reps: number;
   time: string | null;
+  intervalo: string | null;
+  isCircuit: boolean;
   exercise: Exercise | null;
 }
 
@@ -61,20 +64,23 @@ export default function PacienteHomePage() {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const stored = localStorage.getItem("paciente");
+      const userRole = localStorage.getItem("userRole") || "paciente";
+      const stored = localStorage.getItem(userRole === "alumno" ? "alumno" : "paciente");
       if (!stored) { router.push("/"); return; }
       const { id } = JSON.parse(stored);
 
-      const res = await fetch(`/api/pacientes/${id}/profile`);
+      const apiBase = userRole === "alumno" ? "alumnos" : "pacientes";
+      const res = await fetch(`/api/${apiBase}/${id}/profile`);
       if (!res.ok) { router.push("/"); return; }
 
       const data = await res.json();
-      setPaciente(data.paciente);
+      const profileData = data.paciente || data.alumno;
+      setPaciente(profileData);
       setRutinas(data.rutinas);
 
       // Check if session was already done today
-      if (data.paciente.lastSessionDate) {
-        const last = new Date(data.paciente.lastSessionDate);
+      if (profileData.lastSessionDate) {
+        const last = new Date(profileData.lastSessionDate);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         if (last >= today) setSessionDone(true);
@@ -121,7 +127,9 @@ export default function PacienteHomePage() {
     if (!paciente || sessionDone) return;
     setSessionLoading(true);
     try {
-      const res = await fetch(`/api/pacientes/${paciente.id}/session`, { method: "POST" });
+      const userRole = localStorage.getItem("userRole") || "paciente";
+      const apiBase = userRole === "alumno" ? "alumnos" : "pacientes";
+      const res = await fetch(`/api/${apiBase}/${paciente.id}/session`, { method: "POST" });
       const data = await res.json();
       if (!res.ok) {
         showToast(data.error || "Error al registrar sesión", "error");
@@ -142,6 +150,8 @@ export default function PacienteHomePage() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("paciente");
+    localStorage.removeItem("alumno");
+    localStorage.removeItem("userRole");
     router.push("/");
   };
 
@@ -334,18 +344,22 @@ export default function PacienteHomePage() {
                                 <button
                                   key={ej.id}
                                   onClick={() => openExerciseDetail(ej)}
-                                  className="w-full flex items-center gap-3 p-3 bg-background-dark/50 hover:bg-white/[0.03] transition-colors border border-slate-800 rounded-xl text-left group"
+                                  className={`w-full flex items-center gap-3 p-3 bg-background-dark/50 hover:bg-white/[0.03] transition-colors border rounded-xl text-left group ${ej.isCircuit ? 'border-yellow-500/40' : 'border-slate-800'}`}
                                 >
+                                  {/* Circuit indicator */}
+                                  {ej.isCircuit && (
+                                    <div className="absolute -top-1 -left-1 w-5 h-5 z-10">
+                                      <img src="/rayo.svg" alt="Circuito" className="w-full h-full" />
+                                    </div>
+                                  )}
                                   {/* Video thumbnail or icon */}
                                   <div className="w-14 h-14 rounded-xl bg-slate-800 flex-shrink-0 flex items-center justify-center overflow-hidden relative border border-slate-700">
                                     {ej.exercise?.videoUrl ? (
                                       <>
-                                        <video
-                                          src={ej.exercise.videoUrl}
-                                          className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity"
-                                          muted
-                                          playsInline
-                                          preload="metadata"
+                                        <ExerciseVideo
+                                          url={ej.exercise.videoUrl}
+                                          thumbnailMode={true}
+                                          videoClassName="opacity-60 group-hover:opacity-80 transition-opacity"
                                         />
                                         <div className="absolute inset-0 flex items-center justify-center">
                                           <div className="w-6 h-6 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
@@ -360,10 +374,11 @@ export default function PacienteHomePage() {
                                     )}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <h4 className="text-sm font-bold text-white truncate group-hover:text-primary transition-colors">
+                                    <h4 className="text-sm font-bold text-white truncate group-hover:text-primary transition-colors flex items-center gap-1.5">
+                                      {ej.isCircuit && <img src="/rayo.svg" alt="⚡" className="w-4 h-4 inline-block flex-shrink-0" />}
                                       {ej.exercise?.name || "Ejercicio"}
                                     </h4>
-                                    <div className="flex items-center gap-2 mt-1">
+                                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                                       <span className="text-[11px] text-slate-400 font-medium bg-slate-800/50 px-1.5 py-0.5 rounded">
                                         {ej.sets} <span className="text-slate-500">sets</span>
                                       </span>
@@ -373,6 +388,11 @@ export default function PacienteHomePage() {
                                       {ej.time && (
                                         <span className="text-[11px] text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded">
                                           {ej.time}
+                                        </span>
+                                      )}
+                                      {ej.intervalo && (
+                                        <span className="text-[11px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                                          {ej.intervalo}
                                         </span>
                                       )}
                                     </div>
@@ -477,13 +497,9 @@ export default function PacienteHomePage() {
             {/* Video or Icon */}
             {viewingExercise.exercise?.videoUrl ? (
               <div className="w-full aspect-video bg-black flex items-center justify-center">
-                <video
-                  src={viewingExercise.exercise.videoUrl}
-                  controls
-                  autoPlay
-                  playsInline
-                  controlsList="nodownload"
-                  className="w-full h-full object-contain"
+                <ExerciseVideo
+                  url={viewingExercise.exercise.videoUrl}
+                  videoClassName="object-contain"
                 />
               </div>
             ) : (
@@ -498,7 +514,13 @@ export default function PacienteHomePage() {
             {/* Content */}
             <div className="p-5 space-y-6">
               {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-3">
+              {viewingExercise.isCircuit && (
+                <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+                  <img src="/rayo.svg" alt="Circuito" className="w-5 h-5" />
+                  <span className="text-sm font-bold text-yellow-400">Ejercicio de Circuito</span>
+                </div>
+              )}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="bg-slate-800/30 rounded-xl p-3 flex flex-col items-center justify-center text-center border border-slate-800">
                   <span className="text-[10px] uppercase font-bold text-slate-500 mb-1">Series</span>
                   <span className="text-xl font-black text-white">{viewingExercise.sets}</span>
@@ -510,6 +532,10 @@ export default function PacienteHomePage() {
                 <div className="bg-primary/5 rounded-xl p-3 flex flex-col items-center justify-center text-center border border-primary/20">
                   <span className="text-[10px] uppercase font-bold text-primary/80 mb-1">Tiempo</span>
                   <span className="text-xl font-black text-primary">{viewingExercise.time || "—"}</span>
+                </div>
+                <div className="bg-emerald-500/5 rounded-xl p-3 flex flex-col items-center justify-center text-center border border-emerald-500/20">
+                  <span className="text-[10px] uppercase font-bold text-emerald-500/80 mb-1">Intervalo</span>
+                  <span className="text-xl font-black text-emerald-400">{viewingExercise.intervalo || "—"}</span>
                 </div>
               </div>
 

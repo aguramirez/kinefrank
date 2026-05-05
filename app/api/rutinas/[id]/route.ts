@@ -63,6 +63,8 @@ export async function PUT(
                 sets: ej.sets,
                 reps: ej.reps,
                 time: ej.time || null,
+                intervalo: ej.intervalo || null,
+                isCircuit: ej.isCircuit || false,
               })),
             },
           })),

@@ -8,10 +8,10 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const { pacienteId } = await req.json();
+    const { pacienteId, alumnoId } = await req.json();
 
-    if (!pacienteId) {
-      return NextResponse.json({ error: 'pacienteId es obligatorio.' }, { status: 400 });
+    if (!pacienteId && !alumnoId) {
+      return NextResponse.json({ error: 'pacienteId o alumnoId es obligatorio.' }, { status: 400 });
     }
 
     // Fetch the source routine with all its days and exercises
@@ -29,24 +29,28 @@ export async function POST(
       return NextResponse.json({ error: 'Rutina no encontrada.' }, { status: 404 });
     }
 
-    // Check if this patient already has a routine with this sourceId
+    // Check if this patient/alumno already has a routine with this sourceId
     const existing = await prisma.rutina.findFirst({
       where: {
-        pacienteId,
-        name: sourceRutina.name,
+        OR: [
+          { pacienteId: pacienteId || undefined, name: sourceRutina.name },
+          { alumnoId: alumnoId || undefined, name: sourceRutina.name }
+        ]
       },
     });
 
     if (existing) {
-      return NextResponse.json({ error: 'El paciente ya tiene esta rutina asignada.' }, { status: 409 });
+      const target = pacienteId ? 'El paciente' : 'El alumno';
+      return NextResponse.json({ error: `${target} ya tiene esta rutina asignada.` }, { status: 409 });
     }
 
-    // Clone the routine for the patient
+    // Clone the routine
     const cloned = await prisma.rutina.create({
       data: {
         name: sourceRutina.name,
         description: sourceRutina.description,
-        pacienteId,
+        pacienteId: pacienteId || null,
+        alumnoId: alumnoId || null,
         dias: {
           create: sourceRutina.dias.map((dia) => ({
             name: dia.name,
@@ -56,6 +60,8 @@ export async function POST(
                 sets: ej.sets,
                 reps: ej.reps,
                 time: ej.time,
+                intervalo: ej.intervalo,
+                isCircuit: ej.isCircuit,
               })),
             },
           })),
@@ -64,6 +70,7 @@ export async function POST(
       include: {
         dias: { include: { ejercicios: true } },
         paciente: { select: { id: true, fullName: true, dni: true } },
+        alumno: { select: { id: true, fullName: true, dni: true } },
       },
     });
 
@@ -74,17 +81,17 @@ export async function POST(
   }
 }
 
-// DELETE /api/rutinas/[id]/assign — Unassign a routine from a patient (delete the clone)
+// DELETE /api/rutinas/[id]/assign — Unassign a routine (delete the clone)
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    const { pacienteId } = await req.json();
+    const { pacienteId, alumnoId } = await req.json();
 
-    if (!pacienteId) {
-      return NextResponse.json({ error: 'pacienteId es obligatorio.' }, { status: 400 });
+    if (!pacienteId && !alumnoId) {
+      return NextResponse.json({ error: 'pacienteId o alumnoId es obligatorio.' }, { status: 400 });
     }
 
     // Find the source routine to get its name
@@ -97,20 +104,23 @@ export async function DELETE(
       return NextResponse.json({ error: 'Rutina no encontrada.' }, { status: 404 });
     }
 
-    // Find and delete the patient's copy of this routine
-    const patientCopy = await prisma.rutina.findFirst({
+    // Find and delete the patient's/alumno's copy of this routine
+    const copy = await prisma.rutina.findFirst({
       where: {
-        pacienteId,
-        name: sourceRutina.name,
+        OR: [
+          { pacienteId: pacienteId || undefined, name: sourceRutina.name },
+          { alumnoId: alumnoId || undefined, name: sourceRutina.name }
+        ]
       },
     });
 
-    if (!patientCopy) {
-      return NextResponse.json({ error: 'El paciente no tiene esta rutina asignada.' }, { status: 404 });
+    if (!copy) {
+      const target = pacienteId ? 'El paciente' : 'El alumno';
+      return NextResponse.json({ error: `${target} no tiene esta rutina asignada.` }, { status: 404 });
     }
 
-    // Delete (cascade will remove dias and ejercicios)
-    await prisma.rutina.delete({ where: { id: patientCopy.id } });
+    // Delete
+    await prisma.rutina.delete({ where: { id: copy.id } });
 
     return NextResponse.json({ message: 'Rutina desasignada correctamente.' }, { status: 200 });
   } catch (error) {

@@ -22,20 +22,50 @@ export default function PacienteLoginPage() {
     setError("");
     setLoading(true);
     try {
+      // Try paciente login first
       const res = await fetch("/api/auth/paciente/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dni }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Error al iniciar sesión");
+
+      if (res.ok) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("paciente", JSON.stringify(data.paciente));
+        localStorage.setItem("userRole", "paciente");
+        router.push("/home");
         return;
       }
-      // Guardar token en localStorage
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("paciente", JSON.stringify(data.paciente));
-      router.push("/home");
+
+      // If paciente not found (404), try alumno
+      if (res.status === 404) {
+        const resAlumno = await fetch("/api/auth/alumno/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dni }),
+        });
+        const dataAlumno = await resAlumno.json();
+
+        if (resAlumno.ok) {
+          localStorage.setItem("token", dataAlumno.token);
+          localStorage.setItem("alumno", JSON.stringify(dataAlumno.alumno));
+          localStorage.setItem("userRole", "alumno");
+          router.push("/home");
+          return;
+        }
+
+        // If alumno also not found, show generic error
+        if (resAlumno.status === 404) {
+          setError("DNI no encontrado en el sistema");
+          return;
+        }
+
+        setError(dataAlumno.error || "Error al iniciar sesión");
+        return;
+      }
+
+      setError(data.error || "Error al iniciar sesión");
     } catch {
       setError("Error de conexión con el servidor");
     } finally {

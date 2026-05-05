@@ -25,7 +25,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Logo className="w-5 h-5 drop-shadow-sm" />
             </div>
             <span className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight">
-              OMEGA<span className="text-primary">FIT</span>
+              THUNDER<span className="text-primary">REHAB</span>
             </span>
           </div>
           <div className="w-10" /> {/* Spacer for centering */}

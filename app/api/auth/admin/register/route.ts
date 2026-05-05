@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import bcrypt from 'bcrypt';
 
 // Endpoint para crear el primer admin (útil para desarrollo/setup)
 export async function POST(req: Request) {
@@ -17,15 +16,13 @@ export async function POST(req: Request) {
     //   return NextResponse.json({ error: 'Ya existe un administrador en el sistema' }, { status: 403 });
     // }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const newAdmin = await prisma.admin.create({
       data: {
         fullName,
         email,
         dni,
         username,
-        password: hashedPassword,
+        password,
       }
     });
 

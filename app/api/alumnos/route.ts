@@ -9,7 +9,7 @@ export async function GET(req: Request) {
     const adminId = searchParams.get('adminId');
     const where = adminId ? { adminId } : {};
 
-    const pacientes = await prisma.paciente.findMany({
+    const alumnos = await prisma.alumno.findMany({
       where,
       include: {
         rutinas: {
@@ -23,10 +23,10 @@ export async function GET(req: Request) {
       },
       orderBy: { createdAt: 'desc' }
     });
-    return NextResponse.json(pacientes, { status: 200 });
+    return NextResponse.json(alumnos, { status: 200 });
   } catch (error) {
-    console.error('Fetch Pacientes Error:', error);
-    return NextResponse.json({ error: 'Error al obtener pacientes' }, { status: 500 });
+    console.error('Fetch Alumnos Error:', error);
+    return NextResponse.json({ error: 'Error al obtener alumnos' }, { status: 500 });
   }
 }
 
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Nombre completo y DNI son obligatorios.' }, { status: 400 });
     }
 
-    const newPaciente = await prisma.paciente.create({
+    const newAlumno = await prisma.alumno.create({
       data: {
         fullName: data.fullName.trim(),
         dni: data.dni.trim(),
@@ -58,12 +58,12 @@ export async function POST(req: Request) {
       }
     });
 
-    return NextResponse.json(newPaciente, { status: 201 });
+    return NextResponse.json(newAlumno, { status: 201 });
   } catch (error: any) {
     if (error.code === 'P2002') {
       return NextResponse.json({ error: 'El DNI ya se encuentra registrado.' }, { status: 409 });
     }
-    console.error('Create Paciente Error:', error);
-    return NextResponse.json({ error: 'Error al crear el paciente' }, { status: 500 });
+    console.error('Create Alumno Error:', error);
+    return NextResponse.json({ error: 'Error al crear el alumno' }, { status: 500 });
   }
 }

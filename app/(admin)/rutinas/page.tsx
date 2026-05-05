@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Logo from "@/components/Logo";
+import ExerciseVideo from "@/components/ExerciseVideo";
 
 /* ── Types ── */
 interface Ejercicio {
@@ -18,6 +19,8 @@ interface EjercicioEnDia {
   sets: number;
   reps: number;
   time: string;
+  intervalo: string;
+  isCircuit: boolean;
 }
 
 interface Dia {
@@ -76,6 +79,8 @@ export default function RutinasPage() {
   const [selectorSets, setSelectorSets] = useState(3);
   const [selectorReps, setSelectorReps] = useState(12);
   const [selectorTime, setSelectorTime] = useState("");
+  const [selectorIntervalo, setSelectorIntervalo] = useState("");
+  const [selectorIsCircuit, setSelectorIsCircuit] = useState(false);
 
   // Toast
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
@@ -87,7 +92,10 @@ export default function RutinasPage() {
   // Assign modal
   const [assignRutina, setAssignRutina] = useState<Rutina | null>(null);
   const [allPacientes, setAllPacientes] = useState<PacienteBasic[]>([]);
+  const [allAlumnos, setAllAlumnos] = useState<any[]>([]);
   const [assignedIds, setAssignedIds] = useState<string[]>([]);
+  const [assignedAlumnoIds, setAssignedAlumnoIds] = useState<string[]>([]);
+  const [assignTab, setAssignTab] = useState<"pacientes" | "alumnos">("pacientes");
   const [assignLoading, setAssignLoading] = useState(false);
   const [assignProcessing, setAssignProcessing] = useState<string | null>(null);
 
@@ -182,6 +190,8 @@ export default function RutinasPage() {
           sets: e.sets,
           reps: e.reps,
           time: e.time || "",
+          intervalo: e.intervalo || "",
+          isCircuit: e.isCircuit || false,
         })),
       }))
     );
@@ -229,6 +239,8 @@ export default function RutinasPage() {
     setSelectorSets(3);
     setSelectorReps(12);
     setSelectorTime("");
+    setSelectorIntervalo("");
+    setSelectorIsCircuit(false);
   };
 
   const closeSelector = () => {
@@ -248,6 +260,8 @@ export default function RutinasPage() {
           sets: selectorSets,
           reps: selectorReps,
           time: selectorTime,
+          intervalo: selectorIntervalo,
+          isCircuit: selectorIsCircuit,
         },
       ],
     };
@@ -325,6 +339,8 @@ export default function RutinasPage() {
     const ex = { ...copy[dayIdx].ejercicios[exIdx] };
     if (field === "sets" || field === "reps") {
       ex[field] = Number(value) || 0;
+    } else if (field === "isCircuit") {
+      ex.isCircuit = value === true || value === "true";
     } else {
       (ex as any)[field] = value;
     }
@@ -395,6 +411,8 @@ export default function RutinasPage() {
           sets: e.sets,
           reps: e.reps,
           time: e.time || null,
+          intervalo: e.intervalo || null,
+          isCircuit: e.isCircuit || false,
         })),
       })),
     };
@@ -463,18 +481,25 @@ export default function RutinasPage() {
       const adminStr = localStorage.getItem("admin");
       const adminId = adminStr ? JSON.parse(adminStr).id : "";
 
-      // Fetch patients and assigned IDs in parallel
-      const [pacientesRes, assignedRes] = await Promise.all([
+      // Fetch patients, alumnos and assigned IDs in parallel
+      const [pacientesRes, alumnosRes, assignedRes] = await Promise.all([
         fetch(`/api/pacientes${adminId ? `?adminId=${adminId}` : ""}`),
+        fetch(`/api/alumnos${adminId ? `?adminId=${adminId}` : ""}`),
         fetch(`/api/rutinas/${r.id}/pacientes`),
       ]);
+      
       if (pacientesRes.ok) {
         const data = await pacientesRes.json();
         setAllPacientes(data);
       }
+      if (alumnosRes.ok) {
+        const data = await alumnosRes.json();
+        setAllAlumnos(data);
+      }
       if (assignedRes.ok) {
         const data = await assignedRes.json();
         setAssignedIds(data.assignedPatientIds || []);
+        setAssignedAlumnoIds(data.assignedAlumnoIds || []);
       }
     } catch {
       showToast("Error al cargar datos", "error");
@@ -486,40 +511,37 @@ export default function RutinasPage() {
   const closeAssign = () => {
     setAssignRutina(null);
     setAllPacientes([]);
+    setAllAlumnos([]);
     setAssignedIds([]);
+    setAssignedAlumnoIds([]);
+    setAssignTab("pacientes");
   };
 
-  const handleAssignToggle = async (pacienteId: string, isCurrentlyAssigned: boolean) => {
+  const handleAssignToggle = async (id: string, isCurrentlyAssigned: boolean, type: "paciente" | "alumno") => {
     if (!assignRutina) return;
-    setAssignProcessing(pacienteId);
+    setAssignProcessing(id);
     try {
-      if (isCurrentlyAssigned) {
-        // Unassign
-        const res = await fetch(`/api/rutinas/${assignRutina.id}/assign`, {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pacienteId }),
-        });
-        if (res.ok) {
-          setAssignedIds((prev) => prev.filter((id) => id !== pacienteId));
-          showToast("Rutina desasignada", "success");
+      const body = type === "paciente" ? { pacienteId: id } : { alumnoId: id };
+      const res = await fetch(`/api/rutinas/${assignRutina.id}/assign`, {
+        method: isCurrentlyAssigned ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+        if (type === "paciente") {
+          setAssignedIds((prev) => 
+            isCurrentlyAssigned ? prev.filter((pid) => pid !== id) : [...prev, id]
+          );
         } else {
-          showToast("Error al desasignar", "error");
+          setAssignedAlumnoIds((prev) => 
+            isCurrentlyAssigned ? prev.filter((aid) => aid !== id) : [...prev, id]
+          );
         }
+        showToast(isCurrentlyAssigned ? "Rutina desasignada" : "Rutina asignada", "success");
       } else {
-        // Assign (clone)
-        const res = await fetch(`/api/rutinas/${assignRutina.id}/assign`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pacienteId }),
-        });
-        if (res.ok) {
-          setAssignedIds((prev) => [...prev, pacienteId]);
-          showToast("Rutina asignada", "success");
-        } else {
-          const data = await res.json();
-          showToast(data.error || "Error al asignar", "error");
-        }
+        const data = await res.json();
+        showToast(data.error || "Error al procesar", "error");
       }
       fetchRutinas();
     } catch {
@@ -756,9 +778,11 @@ export default function RutinasPage() {
                                   <span className="text-sm font-medium text-slate-900 dark:text-white">{getEjercicioName(ej.exerciseId)}</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-xs">
+                                  {ej.isCircuit && <img src="/rayo.svg" alt="⚡" className="w-4 h-4" />}
                                   <span className="px-2 py-1 bg-primary/10 text-primary rounded-lg font-bold">{ej.sets} sets</span>
                                   <span className="px-2 py-1 bg-blue-500/10 text-blue-400 rounded-lg font-bold">{ej.reps} reps</span>
                                   {ej.time && <span className="px-2 py-1 bg-amber-500/10 text-amber-400 rounded-lg font-bold">{ej.time}</span>}
+                                  {ej.intervalo && <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-lg font-bold">{ej.intervalo}</span>}
                                 </div>
                               </div>
                             ))}
@@ -1002,6 +1026,31 @@ export default function RutinasPage() {
                                       />
                                     </div>
 
+                                    {/* Intervalo */}
+                                    <div className="flex flex-col items-center gap-1">
+                                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Intervalo</label>
+                                      <input
+                                        type="text"
+                                        value={ex.intervalo}
+                                        onChange={(e) => updateExercise(dIdx, eIdx, "intervalo", e.target.value)}
+                                        placeholder="60s"
+                                        className="w-20 px-2 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-center font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary/50 placeholder:text-slate-400 placeholder:font-normal transition-all shadow-sm hover:border-primary/30"
+                                      />
+                                    </div>
+
+                                    {/* isCircuit toggle */}
+                                    <div className="flex flex-col items-center gap-1">
+                                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Circuito</label>
+                                      <button
+                                        type="button"
+                                        onClick={() => updateExercise(dIdx, eIdx, "isCircuit", !ex.isCircuit as any)}
+                                        className={`w-10 h-10 rounded-lg border flex items-center justify-center transition-all shadow-sm ${ex.isCircuit ? 'bg-yellow-500/20 border-yellow-500/50' : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-primary/30'}`}
+                                        title={ex.isCircuit ? "Quitar circuito" : "Marcar como circuito"}
+                                      >
+                                        {ex.isCircuit ? <img src="/rayo.svg" alt="⚡" className="w-5 h-5" /> : <span className="material-symbols-outlined text-slate-400 text-[18px]">bolt</span>}
+                                      </button>
+                                    </div>
+
                                     {/* Remove */}
                                     <button
                                       onClick={() => removeExerciseFromDay(dIdx, eIdx)}
@@ -1084,7 +1133,7 @@ export default function RutinasPage() {
                   <span className="material-symbols-outlined">person_add</span>
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Asignar Pacientes</h3>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Asignar Rutina</h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Rutina: {assignRutina.name}</p>
                 </div>
               </div>
@@ -1093,28 +1142,54 @@ export default function RutinasPage() {
               </button>
             </div>
 
-            {/* Patient list */}
+            {/* Tabs */}
+            <div className="flex p-2 gap-1 bg-slate-100 dark:bg-white/5 border-b border-slate-200 dark:border-slate-800">
+              <button
+                onClick={() => setAssignTab("pacientes")}
+                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
+                  assignTab === "pacientes"
+                    ? "bg-white dark:bg-card-dark text-primary shadow-sm"
+                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                }`}
+              >
+                Pacientes
+              </button>
+              <button
+                onClick={() => setAssignTab("alumnos")}
+                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
+                  assignTab === "alumnos"
+                    ? "bg-white dark:bg-card-dark text-primary shadow-sm"
+                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                }`}
+              >
+                Alumnos
+              </button>
+            </div>
+
+            {/* User list */}
             <div className="flex-1 overflow-y-auto p-5 md:p-6">
               {assignLoading ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <Logo animate className="w-10 h-10 text-primary mb-3" />
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Cargando pacientes...</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Cargando {assignTab}...</p>
                 </div>
-              ) : allPacientes.length === 0 ? (
+              ) : (assignTab === "pacientes" ? allPacientes : allAlumnos).length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <div className="w-16 h-16 bg-slate-100 dark:bg-white/5 rounded-2xl flex items-center justify-center mb-3">
                     <span className="material-symbols-outlined text-3xl text-slate-400">groups</span>
                   </div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">No hay pacientes registrados</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">No hay {assignTab} registrados</p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {allPacientes.map((p) => {
-                    const isAssigned = assignedIds.includes(p.id);
-                    const isProcessing = assignProcessing === p.id;
+                  {(assignTab === "pacientes" ? allPacientes : allAlumnos).map((u) => {
+                    const isAssigned = assignTab === "pacientes" 
+                      ? assignedIds.includes(u.id) 
+                      : assignedAlumnoIds.includes(u.id);
+                    const isProcessing = assignProcessing === u.id;
                     return (
                       <div
-                        key={p.id}
+                        key={u.id}
                         className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isAssigned
                             ? "bg-emerald-500/5 border-emerald-500/30"
                             : "bg-slate-50 dark:bg-white/[0.03] border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
@@ -1123,23 +1198,23 @@ export default function RutinasPage() {
                         {/* Avatar */}
                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold uppercase flex-shrink-0 ${isAssigned ? "bg-emerald-500/15 text-emerald-500" : "bg-primary/10 text-primary"
                           }`}>
-                          {p.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                          {u.fullName.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
                         </div>
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{p.fullName}</p>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400">DNI: {p.dni}</p>
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{u.fullName}</p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">DNI: {u.dni}</p>
                         </div>
 
                         {/* Status badge */}
-                        {!p.isActive && (
+                        {!u.isActive && (
                           <span className="px-2 py-0.5 text-[9px] font-bold rounded-full bg-amber-500/10 text-amber-500 flex-shrink-0">Alta</span>
                         )}
 
                         {/* Toggle button */}
                         <button
-                          onClick={() => handleAssignToggle(p.id, isAssigned)}
+                          onClick={() => handleAssignToggle(u.id, isAssigned, assignTab === "pacientes" ? "paciente" : "alumno")}
                           disabled={isProcessing}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-50 flex-shrink-0 ${isAssigned
                               ? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
@@ -1163,9 +1238,14 @@ export default function RutinasPage() {
             {/* Footer with summary */}
             <div className="p-5 md:p-6 border-t border-slate-200 dark:border-slate-800 flex-shrink-0">
               <div className="flex items-center justify-between">
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  <span className="text-emerald-500 font-bold">{assignedIds.length}</span> paciente{assignedIds.length !== 1 ? "s" : ""} asignado{assignedIds.length !== 1 ? "s" : ""}
-                </p>
+                <div className="flex flex-col">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    <span className="text-emerald-500 font-bold">{assignedIds.length}</span> pacientes
+                  </p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    <span className="text-primary font-bold">{assignedAlumnoIds.length}</span> alumnos
+                  </p>
+                </div>
                 <button onClick={closeAssign} className="px-5 py-2.5 bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-bold hover:bg-slate-200 dark:hover:bg-white/10 transition-all">
                   Cerrar
                 </button>
@@ -1216,7 +1296,7 @@ export default function RutinasPage() {
                         <div className="w-full aspect-video bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden flex items-center justify-center relative">
                           {ej.videoUrl ? (
                             <>
-                              <video src={ej.videoUrl} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                              <ExerciseVideo url={ej.videoUrl} thumbnailMode={true} videoClassName="opacity-80 group-hover:opacity-100 transition-opacity" />
                               <div className="absolute inset-0 flex items-center justify-center">
                                 <div className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white">
                                   <span className="material-symbols-outlined text-sm">play_arrow</span>
@@ -1262,6 +1342,25 @@ export default function RutinasPage() {
                   <div>
                     <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Tiempo (opcional)</label>
                     <input type="text" placeholder="Ej: 45s" value={selectorTime} onChange={(e) => setSelectorTime(e.target.value)} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-center font-bold text-lg dark:text-white outline-none focus:ring-2 focus:ring-primary" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Intervalo (opcional)</label>
+                    <input type="text" placeholder="Ej: 60s" value={selectorIntervalo} onChange={(e) => setSelectorIntervalo(e.target.value)} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-center font-bold text-lg dark:text-white outline-none focus:ring-2 focus:ring-primary" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Ejercicio de Circuito</label>
+                    <button
+                      type="button"
+                      onClick={() => setSelectorIsCircuit(!selectorIsCircuit)}
+                      className={`w-full py-3 rounded-xl border font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+                        selectorIsCircuit
+                          ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400'
+                          : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-primary/30'
+                      }`}
+                    >
+                      {selectorIsCircuit ? <img src="/rayo.svg" alt="⚡" className="w-5 h-5" /> : <span className="material-symbols-outlined text-lg">bolt</span>}
+                      {selectorIsCircuit ? 'Circuito activado' : 'Activar circuito'}
+                    </button>
                   </div>
                 </div>
 
