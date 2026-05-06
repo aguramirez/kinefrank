@@ -29,12 +29,13 @@ export async function POST(
       return NextResponse.json({ error: 'Rutina no encontrada.' }, { status: 404 });
     }
 
-    // Check if this patient/alumno already has a routine with this sourceId
+    // Check if this patient/alumno already has a routine with this name
     const existing = await prisma.rutina.findFirst({
       where: {
+        name: sourceRutina.name,
         OR: [
-          { pacienteId: pacienteId || undefined, name: sourceRutina.name },
-          { alumnoId: alumnoId || undefined, name: sourceRutina.name }
+          pacienteId ? { pacienteId } : { id: 'impossible-id' },
+          alumnoId ? { alumnoId } : { id: 'impossible-id' }
         ]
       },
     });

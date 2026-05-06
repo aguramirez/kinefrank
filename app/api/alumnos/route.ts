@@ -39,6 +39,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Nombre completo y DNI son obligatorios.' }, { status: 400 });
     }
 
+    let adminId = data.adminId;
+    if (!adminId) {
+      const firstAdmin = await prisma.admin.findFirst();
+      if (firstAdmin) adminId = firstAdmin.id;
+    }
+
     const newAlumno = await prisma.alumno.create({
       data: {
         fullName: data.fullName.trim(),
@@ -54,7 +60,7 @@ export async function POST(req: Request) {
         diagnoses: data.diagnoses || [],
         totalSessions: data.totalSessions ? Number(data.totalSessions) : 0,
         expirationDate: data.expirationDate ? new Date(data.expirationDate) : null,
-        adminId: data.adminId || null,
+        adminId: adminId || null,
       }
     });
 
