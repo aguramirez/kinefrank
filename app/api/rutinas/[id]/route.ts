@@ -53,7 +53,8 @@ export async function PUT(
       data: {
         name: data.name,
         description: data.description,
-        pacienteId: data.pacienteId ?? undefined,
+        pacienteId: data.pacienteId !== undefined ? data.pacienteId : undefined,
+        alumnoId: data.alumnoId !== undefined ? data.alumnoId : undefined,
         dias: {
           create: (data.dias || []).map((dia: any) => ({
             name: dia.name,
