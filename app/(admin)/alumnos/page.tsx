@@ -6,12 +6,15 @@ import HistoriaClinicaTab from "./HistoriaClinicaTab";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import ExerciseWeightChart from "@/components/ExerciseWeightChart";
+
 /* ── Types ── */
 interface RutinaEjercicio {
   id: string;
   exerciseId: string;
   sets: number;
   reps: number;
+  weight?: number | null;
   time: string | null;
   intervalo: string | null;
   isCircuit: boolean;
@@ -95,6 +98,7 @@ export default function AlumnosPage() {
 
   // Rutina detail sub-modal
   const [rutinaDetail, setRutinaDetail] = useState<RutinaInfo | null>(null);
+  const [chartExerciseModal, setChartExerciseModal] = useState<{ exerciseId: string; exerciseName: string; alumnoId: string; ejercicioEnDiaId?: string } | null>(null);
 
   // Ejercicios catalog (for resolving exercise names in rutina detail)
   interface EjercicioCatalog { id: string; name: string; }
@@ -988,8 +992,25 @@ export default function AlumnosPage() {
                             <div className="flex items-center gap-2 text-xs flex-shrink-0 flex-wrap justify-end">
                               <span className="px-2 py-1 bg-primary/10 text-primary rounded-lg font-bold">{ej.sets} sets</span>
                               <span className="px-2 py-1 bg-blue-500/10 text-blue-400 rounded-lg font-bold">{ej.reps} reps</span>
+                              {ej.weight !== undefined && ej.weight !== null && (
+                                <span className="px-2 py-1 bg-orange-500/10 text-orange-400 rounded-lg font-bold">{ej.weight} kg</span>
+                              )}
                               {ej.time && <span className="px-2 py-1 bg-amber-500/10 text-amber-400 rounded-lg font-bold">{ej.time}</span>}
                               {ej.intervalo && <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-lg font-bold">{ej.intervalo}</span>}
+                              {selected && (
+                                <button
+                                  onClick={() => setChartExerciseModal({
+                                    exerciseId: ej.exerciseId,
+                                    exerciseName: getEjercicioName(ej.exerciseId),
+                                    alumnoId: selected.id,
+                                    ejercicioEnDiaId: ej.id
+                                  })}
+                                  className="p-1 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                                  title="Ver gráfico de progreso de peso"
+                                >
+                                  <span className="material-symbols-outlined text-[18px]">show_chart</span>
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -1017,6 +1038,49 @@ export default function AlumnosPage() {
                 Editar Rutina
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chart Submodal */}
+      {chartExerciseModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-[fadeIn_0.2s_ease-out]" onClick={() => setChartExerciseModal(null)}>
+          <div className="bg-white dark:bg-card-dark w-full max-w-2xl rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden p-6 space-y-4 animate-[slideUp_0.3s_ease-out]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Progreso de Peso - {chartExerciseModal.exerciseName}</h3>
+              <button onClick={() => setChartExerciseModal(null)} className="p-2 text-slate-400 hover:text-white rounded-lg">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <ExerciseWeightChart
+              exerciseId={chartExerciseModal.exerciseId}
+              ejercicioEnDiaId={chartExerciseModal.ejercicioEnDiaId}
+              alumnoId={chartExerciseModal.alumnoId}
+              exerciseName={chartExerciseModal.exerciseName}
+              onWeightDeleted={(newWeight) => {
+                if (rutinaDetail) {
+                  setRutinaDetail({
+                    ...rutinaDetail,
+                    dias: rutinaDetail.dias.map(d => ({
+                      ...d,
+                      ejercicios: d.ejercicios.map(e => e.id === chartExerciseModal.ejercicioEnDiaId ? { ...e, weight: newWeight } : e)
+                    }))
+                  });
+                }
+                setAlumnos(prevAlumnos =>
+                  prevAlumnos.map(p => ({
+                    ...p,
+                    rutinas: p.rutinas.map(r => ({
+                      ...r,
+                      dias: r.dias.map(d => ({
+                        ...d,
+                        ejercicios: d.ejercicios.map(e => e.id === chartExerciseModal.ejercicioEnDiaId ? { ...e, weight: newWeight } : e)
+                      }))
+                    }))
+                  }))
+                );
+              }}
+            />
           </div>
         </div>
       )}

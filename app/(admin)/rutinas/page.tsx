@@ -18,6 +18,7 @@ interface EjercicioEnDia {
   exerciseId: string;
   sets: number;
   reps: number;
+  weight: number;
   time: string;
   intervalo: string;
   isCircuit: boolean;
@@ -78,6 +79,7 @@ export default function RutinasPage() {
   const [selectorSelectedEx, setSelectorSelectedEx] = useState<Ejercicio | null>(null);
   const [selectorSets, setSelectorSets] = useState(3);
   const [selectorReps, setSelectorReps] = useState(12);
+  const [selectorWeight, setSelectorWeight] = useState(0);
   const [selectorTime, setSelectorTime] = useState("");
   const [selectorIntervalo, setSelectorIntervalo] = useState("");
   const [selectorIsCircuit, setSelectorIsCircuit] = useState(false);
@@ -189,6 +191,7 @@ export default function RutinasPage() {
           exerciseId: e.exerciseId,
           sets: e.sets,
           reps: e.reps,
+          weight: (e as any).weight || 0,
           time: e.time || "",
           intervalo: e.intervalo || "",
           isCircuit: e.isCircuit || false,
@@ -238,6 +241,7 @@ export default function RutinasPage() {
     setSelectorSelectedEx(null);
     setSelectorSets(3);
     setSelectorReps(12);
+    setSelectorWeight(0);
     setSelectorTime("");
     setSelectorIntervalo("");
     setSelectorIsCircuit(false);
@@ -259,6 +263,7 @@ export default function RutinasPage() {
           exerciseId: selectorSelectedEx.id,
           sets: selectorSets,
           reps: selectorReps,
+          weight: selectorWeight,
           time: selectorTime,
           intervalo: selectorIntervalo,
           isCircuit: selectorIsCircuit,
@@ -337,7 +342,7 @@ export default function RutinasPage() {
   ) => {
     const copy = [...formDias];
     const ex = { ...copy[dayIdx].ejercicios[exIdx] };
-    if (field === "sets" || field === "reps") {
+    if (field === "sets" || field === "reps" || field === "weight") {
       ex[field] = Number(value) || 0;
     } else if (field === "isCircuit") {
       ex.isCircuit = value === true || value === "true" || value === 1;
@@ -410,6 +415,7 @@ export default function RutinasPage() {
           exerciseId: e.exerciseId,
           sets: e.sets,
           reps: e.reps,
+          weight: e.weight || 0,
           time: e.time || null,
           intervalo: e.intervalo || null,
           isCircuit: e.isCircuit || false,
@@ -781,6 +787,9 @@ export default function RutinasPage() {
                                   {ej.isCircuit && <img src="/rayo.svg" alt="⚡" className="w-4 h-4" />}
                                   <span className="px-2 py-1 bg-primary/10 text-primary rounded-lg font-bold">{ej.sets} sets</span>
                                   <span className="px-2 py-1 bg-blue-500/10 text-blue-400 rounded-lg font-bold">{ej.reps} reps</span>
+                                  {ej.weight !== undefined && ej.weight !== null && (
+                                    <span className="px-2 py-1 bg-orange-500/10 text-orange-400 rounded-lg font-bold">{ej.weight} kg</span>
+                                  )}
                                   {ej.time && <span className="px-2 py-1 bg-amber-500/10 text-amber-400 rounded-lg font-bold">{ej.time}</span>}
                                   {ej.intervalo && <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-lg font-bold">{ej.intervalo}</span>}
                                 </div>
@@ -1338,6 +1347,10 @@ export default function RutinasPage() {
                   <div>
                     <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Repeticiones (Reps)</label>
                     <input type="number" min={1} value={selectorReps} onChange={(e) => setSelectorReps(Number(e.target.value))} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-center font-bold text-lg dark:text-white outline-none focus:ring-2 focus:ring-primary" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-orange-400 mb-1.5">Peso Inicial (kg, opcional)</label>
+                    <input type="number" min={0} value={selectorWeight} onChange={(e) => setSelectorWeight(Math.max(0, Number(e.target.value)))} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-orange-500/30 rounded-xl text-center font-bold text-lg text-orange-400 outline-none focus:ring-2 focus:ring-orange-500" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Tiempo (opcional)</label>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
 import ExerciseVideo from "@/components/ExerciseVideo";
+import ExerciseWeightChart from "@/components/ExerciseWeightChart";
 
 interface Exercise {
   id: string;
@@ -16,6 +17,7 @@ interface EjercicioEnDia {
   id: string;
   sets: number;
   reps: number;
+  weight?: number | null;
   time: string | null;
   intervalo: string | null;
   isCircuit: boolean;
@@ -56,6 +58,9 @@ export default function PacienteHomePage() {
   const [sessionDone, setSessionDone] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [viewingExercise, setViewingExercise] = useState<EjercicioEnDia | null>(null);
+  const [weightInput, setWeightInput] = useState<number>(0);
+  const [savingWeight, setSavingWeight] = useState(false);
+  const [chartKey, setChartKey] = useState(0);
 
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
@@ -113,6 +118,7 @@ export default function PacienteHomePage() {
   const openExerciseDetail = (ej: EjercicioEnDia) => {
     window.history.pushState({ exerciseModal: true }, "");
     setViewingExercise(ej);
+    setWeightInput(ej.weight || 0);
   };
 
   const closeExerciseDetail = () => {
@@ -120,6 +126,48 @@ export default function PacienteHomePage() {
       window.history.back(); // Triggers popstate
     } else {
       setViewingExercise(null);
+    }
+  };
+
+  const handleSaveWeight = async () => {
+    if (!viewingExercise || !paciente) return;
+    setSavingWeight(true);
+    try {
+      const userRole = localStorage.getItem("userRole") || "paciente";
+      const isAlumno = userRole === "alumno";
+      const res = await fetch("/api/ejercicios/peso", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ejercicioEnDiaId: viewingExercise.id,
+          exerciseId: viewingExercise.exercise?.id,
+          pacienteId: !isAlumno ? paciente.id : undefined,
+          alumnoId: isAlumno ? paciente.id : undefined,
+          weight: weightInput,
+        }),
+      });
+      if (res.ok) {
+        showToast("Peso actualizado ✓", "success");
+        setViewingExercise((prev) => (prev ? { ...prev, weight: weightInput } : prev));
+        setRutinas((prevRutinas) =>
+          prevRutinas.map((r) => ({
+            ...r,
+            dias: r.dias.map((d) => ({
+              ...d,
+              ejercicios: d.ejercicios.map((e) =>
+                e.id === viewingExercise.id ? { ...e, weight: weightInput } : e
+              ),
+            })),
+          }))
+        );
+        setChartKey((k) => k + 1);
+      } else {
+        showToast("Error al guardar peso", "error");
+      }
+    } catch {
+      showToast("Error de conexión", "error");
+    } finally {
+      setSavingWeight(false);
     }
   };
 
@@ -385,6 +433,11 @@ export default function PacienteHomePage() {
                                       <span className="text-[11px] text-slate-400 font-medium bg-slate-800/50 px-1.5 py-0.5 rounded">
                                         {ej.reps} <span className="text-slate-500">reps</span>
                                       </span>
+                                      {ej.weight !== undefined && ej.weight !== null && (
+                                        <span className="text-[11px] text-orange-400 font-bold bg-orange-500/10 px-1.5 py-0.5 rounded">
+                                          {ej.weight} kg
+                                        </span>
+                                      )}
                                       {ej.time && (
                                         <span className="text-[11px] text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded">
                                           {ej.time}
@@ -538,6 +591,91 @@ export default function PacienteHomePage() {
                   <span className="text-xl font-black text-emerald-400">{viewingExercise.intervalo || "—"}</span>
                 </div>
               </div>
+
+              {/* Weight Editor Input */}
+              <div className="bg-gradient-to-r from-orange-950/40 via-card-dark to-slate-900 border border-orange-500/30 p-4 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-orange-400">fitness_center</span>
+                    <span className="text-sm font-bold text-white">Peso Utilizado (kg)</span>
+                  </div>
+                  <span className="text-xs text-orange-400/90 font-medium">Registrar en esta sesión</span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center bg-slate-900 border border-slate-700 rounded-xl overflow-hidden flex-1">
+                    <button
+                      type="button"
+                      onClick={() => setWeightInput((w) => Math.max(0, w - 1))}
+                      className="px-3.5 py-2.5 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 font-black text-lg transition-colors"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      min={0}
+                      value={weightInput}
+                      onChange={(e) => setWeightInput(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="w-full bg-transparent text-center text-white font-black text-lg outline-none px-2"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setWeightInput((w) => w + 1)}
+                      className="px-3.5 py-2.5 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 font-black text-lg transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSaveWeight}
+                    disabled={savingWeight}
+                    className="px-5 py-3 bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-600 text-white font-bold rounded-xl text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center gap-2 shrink-0"
+                  >
+                    {savingWeight ? (
+                      <span className="material-symbols-outlined text-lg animate-spin">sync</span>
+                    ) : (
+                      <span className="material-symbols-outlined text-lg">save</span>
+                    )}
+                    <span>Guardar</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Weight History Chart */}
+              {viewingExercise.exercise?.id && (
+                <ExerciseWeightChart
+                  key={`${viewingExercise.id}-${chartKey}`}
+                  exerciseId={viewingExercise.exercise.id}
+                  ejercicioEnDiaId={viewingExercise.id}
+                  pacienteId={
+                    (localStorage.getItem("userRole") || "paciente") === "paciente"
+                      ? paciente.id
+                      : undefined
+                  }
+                  alumnoId={
+                    (localStorage.getItem("userRole") || "paciente") === "alumno"
+                      ? paciente.id
+                      : undefined
+                  }
+                  exerciseName={viewingExercise.exercise.name}
+                  onWeightDeleted={(newWeight) => {
+                    setWeightInput(newWeight);
+                    setViewingExercise((prev) => (prev ? { ...prev, weight: newWeight } : prev));
+                    setRutinas((prevRutinas) =>
+                      prevRutinas.map((r) => ({
+                        ...r,
+                        dias: r.dias.map((d) => ({
+                          ...d,
+                          ejercicios: d.ejercicios.map((e) =>
+                            e.id === viewingExercise.id ? { ...e, weight: newWeight } : e
+                          ),
+                        })),
+                      }))
+                    );
+                  }}
+                />
+              )}
 
               {/* Description */}
               <div>
