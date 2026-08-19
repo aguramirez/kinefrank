@@ -59,6 +59,7 @@ export async function POST(req: Request) {
                 exerciseId: ej.exerciseId,
                 sets: ej.sets,
                 reps: ej.reps,
+                weight: ej.weight !== undefined ? Number(ej.weight) : 0,
                 time: ej.time,
                 intervalo: ej.intervalo,
                 isCircuit: ej.isCircuit || false

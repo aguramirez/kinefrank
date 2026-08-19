@@ -29,6 +29,34 @@ export async function POST(
       },
     });
 
+    // Record weight snapshot for active alumno routine exercises
+    const rutinas = await prisma.rutina.findMany({
+      where: { alumnoId: id },
+      include: {
+        dias: {
+          include: { ejercicios: true },
+        },
+      },
+    });
+
+    const now = new Date();
+    for (const r of rutinas) {
+      for (const d of r.dias) {
+        for (const e of d.ejercicios) {
+          await prisma.ejercicioPesoLog.create({
+            data: {
+              ejercicioEnDiaId: e.id,
+              exerciseId: e.exerciseId,
+              rutinaId: r.id,
+              alumnoId: id,
+              weight: e.weight || 0,
+              date: now,
+            },
+          });
+        }
+      }
+    }
+
     return NextResponse.json({
       message: 'Sesión finalizada correctamente',
       sessionsCount: updated.sessionsCount,

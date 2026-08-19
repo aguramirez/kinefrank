@@ -62,9 +62,13 @@ export async function GET(
         for (const e of d.ejercicios) {
           ejerciciosResponse.push({
             id: e.id,
+            exerciseId: e.exerciseId,
             sets: e.sets,
             reps: e.reps,
+            weight: e.weight ?? 0,
             time: e.time,
+            intervalo: e.intervalo,
+            isCircuit: e.isCircuit,
             exercise: ejercicioMap[e.exerciseId] ?? null,
           });
         }

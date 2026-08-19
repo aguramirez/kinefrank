@@ -62,6 +62,7 @@ export async function PUT(
                 exerciseId: ej.exerciseId,
                 sets: ej.sets,
                 reps: ej.reps,
+                weight: ej.weight !== undefined ? Number(ej.weight) : 0,
                 time: ej.time || null,
                 intervalo: ej.intervalo || null,
                 isCircuit: ej.isCircuit || false,
