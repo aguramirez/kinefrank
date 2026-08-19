@@ -43,6 +43,7 @@ model Paciente {
   adminId          String?
   admin            Admin?    @relation(fields: [adminId], references: [id])
   notasClinicas    NotaClinica[]
+  pesoLogs         EjercicioPesoLog[]
 }
 
 model Alumno {
@@ -69,6 +70,7 @@ model Alumno {
   adminId          String?
   admin            Admin?    @relation(fields: [adminId], references: [id])
   notasClinicas    NotaClinica[]
+  pesoLogs         EjercicioPesoLog[]
 }
 
 model Ejercicio {
@@ -108,6 +110,7 @@ model EjercicioEnDia {
   exerciseId String
   sets       Int
   reps       Int
+  weight     Int?      @default(0)
   time       String?
   intervalo  String?
   isCircuit  Boolean   @default(false)
@@ -125,4 +128,20 @@ model NotaClinica {
   alumno      Alumno?   @relation(fields: [alumnoId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
 }
+
+model EjercicioPesoLog {
+  id               String    @id @default(uuid())
+  ejercicioEnDiaId String?
+  exerciseId       String
+  rutinaId         String?
+  pacienteId       String?
+  alumnoId         String?
+  weight           Int
+  date             DateTime  @default(now())
+  createdAt        DateTime  @default(now())
+
+  paciente         Paciente? @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  alumno           Alumno?   @relation(fields: [alumnoId], references: [id], onDelete: Cascade)
+}
+
 
