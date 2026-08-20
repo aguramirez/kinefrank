@@ -1,11 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import SidebarAdmin from "@/components/SidebarAdmin";
 import Logo from "@/components/Logo";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const admin = localStorage.getItem("admin");
+    if (!token || !admin) {
+      router.replace("/admin");
+    } else {
+      setAuthorized(true);
+    }
+  }, [router]);
+
+  if (!authorized) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-500 text-xs">
+        <span className="material-symbols-outlined text-3xl animate-spin text-primary mb-2">
+          sync
+        </span>
+        Cargando panel de administración...
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen overflow-hidden">
