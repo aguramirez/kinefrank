@@ -40,7 +40,7 @@ export async function PUT(
         name: data.name,
         description: data.description,
         categories: data.categories,
-        videoUrl: data.videoUrl ?? undefined,
+        videoUrl: data.videoUrl === undefined ? undefined : data.videoUrl,
       },
     });
 

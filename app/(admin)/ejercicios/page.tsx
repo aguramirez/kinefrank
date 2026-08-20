@@ -60,6 +60,13 @@ export default function EjerciciosPage() {
     fetchEjercicios();
   }, [fetchEjercicios]);
 
+  const [visibleCount, setVisibleCount] = useState(25);
+
+  // Reset visible count when search query or filters change
+  useEffect(() => {
+    setVisibleCount(25);
+  }, [searchQuery, filterNoVideo]);
+
   // Filtered exercises
   const filtered = ejercicios.filter((e) => {
     const matchesSearch = e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -68,6 +75,26 @@ export default function EjerciciosPage() {
     const matchesVideo = filterNoVideo ? !e.videoUrl : true;
     return matchesSearch && matchesVideo;
   });
+
+  const displayed = filtered.slice(0, visibleCount);
+
+  // Infinite scroll intersection observer
+  useEffect(() => {
+    const sentinel = document.getElementById("infinite-scroll-sentinel");
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + 25, filtered.length));
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [filtered.length, visibleCount]);
 
   // Categories suggestions
   const allCategories = Array.from(new Set(ejercicios.flatMap((e) => e.categories || [])));
@@ -354,44 +381,53 @@ export default function EjerciciosPage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filtered.map((ej) => (
-              <button
-                key={ej.id}
-                onClick={() => openView(ej)}
-                className="text-left bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-800 rounded-2xl p-4 hover:border-primary/50 hover:shadow-lg transition-all group flex flex-col gap-3"
-              >
-                <div className="w-full aspect-video bg-slate-100 dark:bg-slate-800/50 rounded-xl overflow-hidden flex items-center justify-center relative border border-slate-200 dark:border-slate-700/50">
-                  {ej.videoUrl ? (
-                    <>
-                      <ExerciseVideo url={ej.videoUrl} thumbnailMode={true} videoClassName="opacity-80 group-hover:opacity-100 transition-opacity" />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white">
-                          <span className="material-symbols-outlined text-sm">play_arrow</span>
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+              {displayed.map((ej) => (
+                <button
+                  key={ej.id}
+                  onClick={() => openView(ej)}
+                  className="text-left bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-800 rounded-2xl p-4 hover:border-primary/50 hover:shadow-lg transition-all group flex flex-col gap-3"
+                >
+                  <div className="w-full aspect-video bg-slate-100 dark:bg-slate-800/50 rounded-xl overflow-hidden flex items-center justify-center relative border border-slate-200 dark:border-slate-700/50">
+                    {ej.videoUrl ? (
+                      <>
+                        <ExerciseVideo url={ej.videoUrl} thumbnailMode={true} videoClassName="opacity-80 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white">
+                            <span className="material-symbols-outlined text-sm">play_arrow</span>
+                          </div>
                         </div>
+                      </>
+                    ) : (
+                      <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 group-hover:text-primary/50 transition-colors">fitness_center</span>
+                    )}
+                  </div>
+                  <div className="min-w-0 w-full flex-1 flex flex-col">
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white truncate mb-1 group-hover:text-primary transition-colors">{ej.name}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-3 flex-1">{ej.description || "Sin descripción"}</p>
+                    
+                    {ej.categories && ej.categories.length > 0 ? (
+                      <div className="flex flex-wrap gap-1 mt-auto">
+                        {ej.categories.slice(0, 3).map(c => (
+                          <span key={c} className="text-[10px] px-2 py-0.5 bg-primary/10 text-primary font-bold rounded-lg truncate max-w-full">{c}</span>
+                        ))}
+                        {ej.categories.length > 3 && <span className="text-[10px] px-2 py-0.5 text-slate-500 bg-slate-100 dark:bg-white/5 rounded-lg">+{ej.categories.length - 3}</span>}
                       </div>
-                    </>
-                  ) : (
-                    <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 group-hover:text-primary/50 transition-colors">fitness_center</span>
-                  )}
-                </div>
-                <div className="min-w-0 w-full flex-1 flex flex-col">
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white truncate mb-1 group-hover:text-primary transition-colors">{ej.name}</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-3 flex-1">{ej.description || "Sin descripción"}</p>
-                  
-                  {ej.categories && ej.categories.length > 0 ? (
-                    <div className="flex flex-wrap gap-1 mt-auto">
-                      {ej.categories.slice(0, 3).map(c => (
-                        <span key={c} className="text-[10px] px-2 py-0.5 bg-primary/10 text-primary font-bold rounded-lg truncate max-w-full">{c}</span>
-                      ))}
-                      {ej.categories.length > 3 && <span className="text-[10px] px-2 py-0.5 text-slate-500 bg-slate-100 dark:bg-white/5 rounded-lg">+{ej.categories.length - 3}</span>}
-                    </div>
-                  ) : (
-                    <div className="mt-auto h-5"></div>
-                  )}
-                </div>
-              </button>
-            ))}
+                    ) : (
+                      <div className="mt-auto h-5"></div>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Sentinel for infinite scroll */}
+            {filtered.length > visibleCount && (
+              <div id="infinite-scroll-sentinel" className="h-16 w-full flex items-center justify-center mt-6">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+              </div>
+            )}
           </div>
         )}
       </div>
