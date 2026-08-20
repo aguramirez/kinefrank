@@ -95,6 +95,7 @@ export async function GET(
         totalSessions: a.totalSessions ?? 0,
         lastSessionDate: a.lastSessionDate ?? null,
         isActive: a.isActive,
+        runningEnabled: a.runningEnabled ?? false,
       },
       rutinas: rutinasResponse,
     };

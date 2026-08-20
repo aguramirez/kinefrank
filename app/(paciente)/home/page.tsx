@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
 import ExerciseVideo from "@/components/ExerciseVideo";
 import ExerciseWeightChart from "@/components/ExerciseWeightChart";
+import RunningLogsSection from "@/components/RunningLogsSection";
 
 interface Exercise {
   id: string;
@@ -45,6 +46,7 @@ interface PacienteData {
   totalSessions: number;
   lastSessionDate: string | null;
   isActive: boolean;
+  runningEnabled: boolean;
 }
 
 export default function PacienteHomePage() {
@@ -276,6 +278,16 @@ export default function PacienteHomePage() {
             )}
           </div>
         </section>
+
+        {/* Running Logs Section */}
+        {paciente.runningEnabled && (
+          <section className="px-4 pb-4">
+            <RunningLogsSection 
+              pacienteId={(localStorage.getItem("userRole") || "paciente") === "alumno" ? undefined : paciente.id}
+              alumnoId={(localStorage.getItem("userRole") || "paciente") === "alumno" ? paciente.id : undefined}
+            />
+          </section>
+        )}
 
         {/* Routine Section */}
         <section className="px-4 pb-4">
@@ -606,7 +618,7 @@ export default function PacienteHomePage() {
                   <div className="flex items-center bg-slate-900 border border-slate-700 rounded-xl overflow-hidden flex-1">
                     <button
                       type="button"
-                      onClick={() => setWeightInput((w) => Math.max(0, w - 1))}
+                      onClick={() => setWeightInput((w) => Math.max(0, Number((w - 0.5).toFixed(2))))}
                       className="px-3.5 py-2.5 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 font-black text-lg transition-colors"
                     >
                       -
@@ -614,13 +626,14 @@ export default function PacienteHomePage() {
                     <input
                       type="number"
                       min={0}
+                      step="0.1"
                       value={weightInput}
-                      onChange={(e) => setWeightInput(Math.max(0, parseInt(e.target.value) || 0))}
+                      onChange={(e) => setWeightInput(Math.max(0, parseFloat(e.target.value) || 0))}
                       className="w-full bg-transparent text-center text-white font-black text-lg outline-none px-2"
                     />
                     <button
                       type="button"
-                      onClick={() => setWeightInput((w) => w + 1)}
+                      onClick={() => setWeightInput((w) => Number((w + 0.5).toFixed(2)))}
                       className="px-3.5 py-2.5 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 font-black text-lg transition-colors"
                     >
                       +

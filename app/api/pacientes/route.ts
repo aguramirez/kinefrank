@@ -61,6 +61,7 @@ export async function POST(req: Request) {
         totalSessions: data.totalSessions ? Number(data.totalSessions) : 0,
         expirationDate: data.expirationDate ? new Date(data.expirationDate) : null,
         adminId: adminId || null,
+        runningEnabled: data.runningEnabled ?? false,
       }
     });
 

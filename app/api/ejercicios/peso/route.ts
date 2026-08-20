@@ -8,10 +8,10 @@ export async function POST(req: Request) {
     const { ejercicioEnDiaId, exerciseId: inputExerciseId, pacienteId, alumnoId, weight } = data;
 
     if (weight === undefined || weight === null || isNaN(Number(weight))) {
-      return NextResponse.json({ error: 'El peso es obligatorio y debe ser un número entero.' }, { status: 400 });
+      return NextResponse.json({ error: 'El peso es obligatorio y debe ser un número.' }, { status: 400 });
     }
 
-    const numericWeight = Math.max(0, Math.round(Number(weight)));
+    const numericWeight = Math.max(0, Number(weight));
     let resolvedExerciseId = inputExerciseId;
     let resolvedRutinaId: string | null = null;
 

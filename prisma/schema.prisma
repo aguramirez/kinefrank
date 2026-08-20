@@ -38,12 +38,14 @@ model Paciente {
   dischargeDate    DateTime?
   expirationDate   DateTime?
   diagnoses        String[]
+  runningEnabled   Boolean   @default(false)
   createdAt        DateTime  @default(now())
   rutinas          Rutina[]
   adminId          String?
   admin            Admin?    @relation(fields: [adminId], references: [id])
   notasClinicas    NotaClinica[]
   pesoLogs         EjercicioPesoLog[]
+  runningLogs      RunningLog[]
 }
 
 model Alumno {
@@ -65,12 +67,14 @@ model Alumno {
   dischargeDate    DateTime?
   expirationDate   DateTime?
   diagnoses        String[]
+  runningEnabled   Boolean   @default(false)
   createdAt        DateTime  @default(now())
   rutinas          Rutina[]
   adminId          String?
   admin            Admin?    @relation(fields: [adminId], references: [id])
   notasClinicas    NotaClinica[]
   pesoLogs         EjercicioPesoLog[]
+  runningLogs      RunningLog[]
 }
 
 model Ejercicio {
@@ -110,7 +114,7 @@ model EjercicioEnDia {
   exerciseId String
   sets       Int
   reps       Int
-  weight     Int?      @default(0)
+  weight     Float?     @default(0)
   time       String?
   intervalo  String?
   isCircuit  Boolean   @default(false)
@@ -136,12 +140,25 @@ model EjercicioPesoLog {
   rutinaId         String?
   pacienteId       String?
   alumnoId         String?
-  weight           Int
+  weight           Float
   date             DateTime  @default(now())
   createdAt        DateTime  @default(now())
 
   paciente         Paciente? @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
   alumno           Alumno?   @relation(fields: [alumnoId], references: [id], onDelete: Cascade)
+}
+
+model RunningLog {
+  id           String    @id @default(uuid())
+  distanceEnKM Float
+  velocity     String
+  timeEnMin    Float
+  date         DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  pacienteId   String?
+  paciente     Paciente? @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  alumnoId     String?
+  alumno       Alumno?   @relation(fields: [alumnoId], references: [id], onDelete: Cascade)
 }
 
 

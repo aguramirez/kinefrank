@@ -53,6 +53,7 @@ interface Paciente {
   diagnoses        : string[];
   rutinas          : RutinaInfo[];
   createdAt        : string;
+  runningEnabled   : boolean;
 }
 
 type ModalMode = "create" | "edit" | "delete" | "view" | null;
@@ -62,6 +63,7 @@ const DEFAULT_FORM = {
   fullName: "", dni: "", phone: "", email: "", gender: "", age: "",
   height: "", weight: "", notes: "", healthInsurance: "", totalSessions: "", 
   expirationDate: "", diagnoses: [] as string[],
+  runningEnabled: false,
 };
 
 export default function PacientesPage() {
@@ -184,6 +186,7 @@ export default function PacientesPage() {
       totalSessions: p.totalSessions != null ? String(p.totalSessions) : "",
       diagnoses: [...p.diagnoses],
       expirationDate: p.expirationDate ? p.expirationDate.split('T')[0] : "",
+      runningEnabled: p.runningEnabled ?? false,
     });
     setFormError("");
     setActiveTab("info");
@@ -240,6 +243,7 @@ export default function PacientesPage() {
       diagnoses: form.diagnoses,
       expirationDate: form.expirationDate || null,
       adminId: adminObj ? adminObj.id : null,
+      runningEnabled: form.runningEnabled,
     };
 
     try {
@@ -322,7 +326,7 @@ export default function PacientesPage() {
   };
 
   /* ── Helpers ── */
-  const updateForm = (field: string, value: string) => setForm({ ...form, [field]: value });
+  const updateForm = (field: string, value: any) => setForm({ ...form, [field]: value });
   const displayValue = (val: string | number | null | undefined, suffix = "") => {
     if (val == null || val === "" || val === 0) return "—";
     return `${val}${suffix}`;
@@ -834,6 +838,18 @@ export default function PacientesPage() {
                         <div>
                           <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1.5">Vencimiento (Alta Automática)</label>
                           <input type="date" value={form.expirationDate} onChange={(e) => updateForm("expirationDate", e.target.value)} className="w-full px-4 py-3 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/40 focus:border-primary/50 outline-none transition-all dark:text-white placeholder:text-slate-400" />
+                        </div>
+                        <div className="flex items-center gap-3 pt-4 sm:pt-6">
+                          <input
+                            type="checkbox"
+                            id="runningEnabled"
+                            checked={form.runningEnabled}
+                            onChange={(e) => updateForm("runningEnabled", e.target.checked)}
+                            className="w-4 h-4 text-primary bg-slate-100 dark:bg-white/5 border-slate-300 dark:border-slate-700 rounded focus:ring-primary/40 focus:ring-2 cursor-pointer"
+                          />
+                          <label htmlFor="runningEnabled" className="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
+                            Habilitar Módulo de Running
+                          </label>
                         </div>
                         <div className="col-span-full">
                           <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1.5">Notas</label>
